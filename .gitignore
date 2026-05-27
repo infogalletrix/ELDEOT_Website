@@ -1,0 +1,16 @@
+# Node
+node_modules
+dist
+
+# .NET
+bin
+obj
+
+# VS Code
+.vscode
+
+# Environment
+.env
+
+# macOS
+.DS_Store
