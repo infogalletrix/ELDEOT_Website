@@ -248,7 +248,7 @@ const AdminPage = () => {
     setLoginSuccess('');
     setIsSubmitting(true);
 
-    const activePassword = localStorage.getItem('adminPassword') || 'admineldeol2026';
+    const activePassword = localStorage.getItem('adminPassword') || 'admineldeot2026';
 
     // Simulate authentication lag for premium experience
     setTimeout(() => {
@@ -359,7 +359,7 @@ const AdminPage = () => {
     setPasswordError('');
     setPasswordSuccess('');
 
-    const activePassword = localStorage.getItem('adminPassword') || 'admineldeol2026';
+    const activePassword = localStorage.getItem('adminPassword') || 'admineldeot2026';
 
     if (changePasswordOld !== activePassword) {
       setPasswordError('Incorrect current password.');

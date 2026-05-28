@@ -110,13 +110,13 @@ const ContactPage = () => {
             {/* Contact Details Grid */}
             <div className="flex flex-col gap-8 ml-2">
               {/* Email */}
-              <a href="mailto:hello@eldeol.design" className="flex items-center gap-6 group">
+              <a href="mailto:hello@eldeot.design" className="flex items-center gap-6 group">
                 <div className="w-[64px] h-[64px] bg-[#F5E6DA] rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#D97736] group-hover:text-white transition-colors duration-300">
                   <Mail className="w-7 h-7 text-[#D97736] group-hover:text-white transition-colors duration-300" strokeWidth={1.5} />
                 </div>
                 <div>
                   <p className="text-gray-500 font-sans text-[15px] mb-1">Email</p>
-                  <p className="text-[#1A1A1A] font-sans font-medium text-[17px] group-hover:text-[#D97736] transition-colors">hello@eldeol.design</p>
+                  <p className="text-[#1A1A1A] font-sans font-medium text-[17px] group-hover:text-[#D97736] transition-colors">hello@eldeot.design</p>
                 </div>
               </a>
 
@@ -190,7 +190,7 @@ const ContactPage = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 font-sans text-[15px] mb-1">Facebook</p>
-                  <p className="text-[#1A1A1A] font-sans font-medium text-[17px] group-hover:text-[#D97736] transition-colors">eldeol.design</p>
+                  <p className="text-[#1A1A1A] font-sans font-medium text-[17px] group-hover:text-[#D97736] transition-colors">eldeot.design</p>
                 </div>
               </a>
 
@@ -204,7 +204,7 @@ const ContactPage = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 font-sans text-[15px] mb-1">Instagram</p>
-                  <p className="text-[#1A1A1A] font-sans font-medium text-[17px] group-hover:text-[#D97736] transition-colors">@eldeol.design</p>
+                  <p className="text-[#1A1A1A] font-sans font-medium text-[17px] group-hover:text-[#D97736] transition-colors">@eldeot.design</p>
                 </div>
               </a>
             </div>

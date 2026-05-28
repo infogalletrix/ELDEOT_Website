@@ -77,9 +77,9 @@ const Footer = () => {
             <h4 className="text-white font-serif font-bold text-lg mb-8">Contact</h4>
             <ul className="flex flex-col gap-5">
               <li className="text-gray-400 font-sans text-[15px]">
-                <a href="mailto:hello@eldeol.design" className="flex items-center gap-3 hover:text-[#D97736] transition-colors group">
+                <a href="mailto:hello@eldeot.design" className="flex items-center gap-3 hover:text-[#D97736] transition-colors group">
                   <Mail className="w-5 h-5 text-gray-400 group-hover:text-[#D97736] transition-colors shrink-0" />
-                  <span>hello@eldeol.design</span>
+                  <span>hello@eldeot.design</span>
                 </a>
               </li>
               <li className="text-gray-400 font-sans text-[15px]">

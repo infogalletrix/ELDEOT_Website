@@ -201,7 +201,7 @@ const FloatingWidgets = () => {
     } else if (query.includes("design") || query.includes("interior") || query.includes("space") || query.includes("office") || query.includes("home") || query.includes("service")) {
       responseText = "We provide end-to-end design services for homes, offices, and commercial spaces. You can check out our offerings on the 'Services' page (/services), view past projects in our 'Portfolio' (/portfolio), or fill out a quote form to begin.";
     } else if (query.includes("contact") || query.includes("phone") || query.includes("email") || query.includes("address") || query.includes("whatsapp") || query.includes("call")) {
-      responseText = "You can reach us at hello@eldeol.design, phone/WhatsApp at +91 97903 70405, or via our 'Contact' page (/contact) which includes a direct form and our studio address.";
+      responseText = "You can reach us at hello@eldeot.design, phone/WhatsApp at +91 97903 70405, or via our 'Contact' page (/contact) which includes a direct form and our studio address.";
       showContactForm = true;
     }
 
