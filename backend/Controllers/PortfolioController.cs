@@ -6,6 +6,8 @@ using System.IO;
 using System.Threading.Tasks;
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace backend.Controllers
 {
@@ -35,25 +37,34 @@ namespace backend.Controllers
                 return BadRequest(new { message = "Title, Category and Image are required." });
             }
 
-            // 1. Validate max 10MB size limit
+            // 1. Validate max 10MB size limit for main image
             if (itemDto.Image.Length > 10 * 1024 * 1024)
             {
-                return BadRequest(new { message = "Maximum file size allowed is 10MB." });
+                return BadRequest(new { message = "Maximum file size allowed for the main image is 10MB." });
             }
 
-            // 2. Validate supported file format (jpeg, png, svg, avif, webp)
-            var extension = GetExtensionFromHeader(itemDto.Image);
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".svg", ".avif", ".webp" };
-            if (!allowedExtensions.Contains(extension.ToLowerInvariant()))
+            // 2. Validate supported file format for main image
+            var mainExtension = GetExtensionFromHeader(itemDto.Image);
+            if (!allowedExtensions.Contains(mainExtension.ToLowerInvariant()))
             {
-                return BadRequest(new { message = "Unsupported image format. Allowed formats are JPEG, PNG, SVG, AVIF, and WEBP." });
+                return BadRequest(new { message = "Unsupported main image format. Allowed formats are JPEG, PNG, SVG, AVIF, and WEBP." });
             }
 
-            // 3. Validate max 12 images in each section/category
+            // 3. Validate max 12 images in each section/category - Note: the requirement was 12 images per *project*, 
+            // but the original code checked per category. Let's keep the category check but change the project check too.
+            if (itemDto.AdditionalImages != null && itemDto.AdditionalImages.Count > 11)
+            {
+                return BadRequest(new { message = "Maximum of 11 additional images allowed per project (12 total)." });
+            }
+
             var countInSection = _context.PortfolioItems.Count(p => p.Category.ToLower() == itemDto.Category.ToLower());
             if (countInSection >= 12)
             {
-                return BadRequest(new { message = $"Maximum of 12 images allowed in the {itemDto.Category} section." });
+                // return BadRequest(new { message = $"Maximum of 12 projects allowed in the {itemDto.Category} section." });
+                // We'll just continue if they want to add more projects, but the original code blocked it. 
+                // Wait, I will keep the original logic for section limit so I don't break existing rules.
+                return BadRequest(new { message = $"Maximum of 12 projects allowed in the {itemDto.Category} section." });
             }
 
             var item = new PortfolioItem
@@ -67,7 +78,7 @@ namespace backend.Controllers
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-            var uniqueFileName = Guid.NewGuid().ToString() + extension;
+            var uniqueFileName = Guid.NewGuid().ToString() + mainExtension;
             var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -75,6 +86,29 @@ namespace backend.Controllers
                 await itemDto.Image.CopyToAsync(stream);
             }
             item.ImagePath = "/uploads/" + uniqueFileName;
+
+            var additionalImagePaths = new List<string>();
+            if (itemDto.AdditionalImages != null && itemDto.AdditionalImages.Count > 0)
+            {
+                foreach (var addImg in itemDto.AdditionalImages)
+                {
+                    if (addImg.Length > 10 * 1024 * 1024)
+                        return BadRequest(new { message = "One of the additional images exceeds the 10MB limit." });
+                    
+                    var addExt = GetExtensionFromHeader(addImg);
+                    if (!allowedExtensions.Contains(addExt.ToLowerInvariant()))
+                        return BadRequest(new { message = "One of the additional images has an unsupported format." });
+
+                    var addFileName = Guid.NewGuid().ToString() + addExt;
+                    var addFilePath = Path.Combine(uploadsFolder, addFileName);
+                    using (var addStream = new FileStream(addFilePath, FileMode.Create))
+                    {
+                        await addImg.CopyToAsync(addStream);
+                    }
+                    additionalImagePaths.Add("/uploads/" + addFileName);
+                }
+            }
+            item.AdditionalImages = JsonSerializer.Serialize(additionalImagePaths);
 
             _context.PortfolioItems.Add(item);
             await _context.SaveChangesAsync();
@@ -149,18 +183,148 @@ namespace backend.Controllers
                 }
             }
 
+            if (!string.IsNullOrEmpty(item.AdditionalImages) && item.AdditionalImages != "[]")
+            {
+                try
+                {
+                    var additionalPaths = JsonSerializer.Deserialize<List<string>>(item.AdditionalImages);
+                    if (additionalPaths != null)
+                    {
+                        foreach (var path in additionalPaths)
+                        {
+                            var addFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", path.TrimStart('/'));
+                            if (System.IO.File.Exists(addFilePath))
+                            {
+                                System.IO.File.Delete(addFilePath);
+                            }
+                        }
+                    }
+                }
+                catch { } // Ignore JSON parsing errors on delete
+            }
+
             _context.PortfolioItems.Remove(item);
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Portfolio item deleted successfully." });
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdatePortfolioItem(int id, [FromForm] PortfolioUpdateDto dto)
+        {
+            var item = await _context.PortfolioItems.FindAsync(id);
+            if (item == null) return NotFound(new { message = "Portfolio item not found." });
+
+            if (string.IsNullOrEmpty(dto.Title) || string.IsNullOrEmpty(dto.Category))
+                return BadRequest(new { message = "Title and Category are required." });
+
+            item.Title = dto.Title;
+            item.Location = dto.Location ?? "";
+            item.Category = dto.Category;
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".svg", ".avif", ".webp" };
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
+            if (dto.Image != null)
+            {
+                if (dto.Image.Length > 10 * 1024 * 1024) return BadRequest(new { message = "Maximum file size for main image is 10MB." });
+                var mainExt = GetExtensionFromHeader(dto.Image);
+                if (!allowedExtensions.Contains(mainExt.ToLowerInvariant())) return BadRequest(new { message = "Unsupported main image format." });
+
+                // Remove old main image
+                if (!string.IsNullOrEmpty(item.ImagePath))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", item.ImagePath.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFilePath)) System.IO.File.Delete(oldFilePath);
+                }
+
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                var uniqueFileName = Guid.NewGuid().ToString() + mainExt;
+                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await dto.Image.CopyToAsync(stream);
+                }
+                item.ImagePath = "/uploads/" + uniqueFileName;
+            }
+
+            var retainedPaths = new List<string>();
+            if (!string.IsNullOrEmpty(dto.RetainedAdditionalImages))
+            {
+                try
+                {
+                    retainedPaths = JsonSerializer.Deserialize<List<string>>(dto.RetainedAdditionalImages) ?? new List<string>();
+                }
+                catch { }
+            }
+
+            var currentPaths = new List<string>();
+            if (!string.IsNullOrEmpty(item.AdditionalImages) && item.AdditionalImages != "[]")
+            {
+                try
+                {
+                    currentPaths = JsonSerializer.Deserialize<List<string>>(item.AdditionalImages) ?? new List<string>();
+                }
+                catch { }
+            }
+
+            // Delete paths that are in currentPaths but NOT in retainedPaths
+            foreach(var path in currentPaths)
+            {
+                if(!retainedPaths.Contains(path))
+                {
+                    var oldAddFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", path.TrimStart('/'));
+                    if (System.IO.File.Exists(oldAddFilePath)) System.IO.File.Delete(oldAddFilePath);
+                }
+            }
+
+            var finalImagePaths = new List<string>(retainedPaths);
+
+            if (dto.AdditionalImages != null && dto.AdditionalImages.Count > 0)
+            {
+                if (finalImagePaths.Count + dto.AdditionalImages.Count > 11) return BadRequest(new { message = "Maximum of 11 additional images allowed." });
+                
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+                foreach (var addImg in dto.AdditionalImages)
+                {
+                    if (addImg.Length > 10 * 1024 * 1024) return BadRequest(new { message = "One of the additional images exceeds 10MB." });
+                    var addExt = GetExtensionFromHeader(addImg);
+                    if (!allowedExtensions.Contains(addExt.ToLowerInvariant())) return BadRequest(new { message = "Unsupported additional image format." });
+
+                    var addFileName = Guid.NewGuid().ToString() + addExt;
+                    var addFilePath = Path.Combine(uploadsFolder, addFileName);
+                    using (var addStream = new FileStream(addFilePath, FileMode.Create))
+                    {
+                        await addImg.CopyToAsync(addStream);
+                    }
+                    finalImagePaths.Add("/uploads/" + addFileName);
+                }
+            }
+            
+            item.AdditionalImages = JsonSerializer.Serialize(finalImagePaths);
+
+            _context.PortfolioItems.Update(item);
+            await _context.SaveChangesAsync();
+            return Ok(item);
+        }
+    }
+
+    public class PortfolioUpdateDto
+    {
+        public string? Title { get; set; }
+        public string? Location { get; set; }
+        public string? Category { get; set; }
+        public IFormFile? Image { get; set; }
+        public List<IFormFile>? AdditionalImages { get; set; }
+        public string? RetainedAdditionalImages { get; set; }
     }
 
     public class PortfolioItemDto
     {
-        public string Title { get; set; }
-        public string Location { get; set; }
-        public string Category { get; set; }
-        public IFormFile Image { get; set; }
+        public string? Title { get; set; }
+        public string? Location { get; set; }
+        public string? Category { get; set; }
+        public IFormFile? Image { get; set; }
+        public List<IFormFile>? AdditionalImages { get; set; }
     }
 }

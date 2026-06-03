@@ -8,7 +8,7 @@ const Footer = () => {
     <footer className="bg-[#2c2825] pt-20 pb-3 px-8 lg:px-16">
       <div className="max-w-[1400px] mx-auto">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8">
           
           {/* Column 1: Brand */}
           <div className="flex flex-col items-start">
@@ -59,9 +59,9 @@ const Footer = () => {
             <h4 className="text-white font-serif font-bold text-lg mb-8">Services</h4>
             <ul className="flex flex-col gap-4">
               {[
-                { name: 'Home Interior Design', href: '/services' },
-                { name: 'Office Design', href: '/services' },
-                { name: 'Commercial Spaces', href: '/services' }
+                { name: 'Home Interior Design', href: '/services#home-interior' },
+                { name: 'Office Design', href: '/services#office-design' },
+                { name: 'Commercial Spaces', href: '/services#commercial-design' }
               ].map((link) => (
                 <li key={link.name}>
                   <a href={link.href} className="text-gray-400 hover:text-[#D97736] transition-colors font-sans text-[15px]">
@@ -107,13 +107,43 @@ const Footer = () => {
                   <span>+91 97903 70405 (WhatsApp)</span>
                 </a>
               </li>
-              <li className="text-gray-400 font-sans text-[15px]">
-                <a href="https://maps.app.goo.gl/KNjPHsLbsqbhjPBk6?g_st=ic" target="_blank" rel="noopener noreferrer" className="flex items-start gap-3 hover:text-[#D97736] transition-colors group">
-                  <MapPin className="w-5 h-5 text-gray-400 group-hover:text-[#D97736] transition-colors shrink-0 mt-0.5" />
-                  <span>ELDE'OT Interiors, BY- pass road, Kanjanayakanpatti, Vellai Kottai, Aruppukkottai, Tamil Nadu 626101</span>
-                </a>
-              </li>
+
             </ul>
+          </div>
+
+          {/* Column 5-6: Our Locations */}
+          <div className="lg:col-span-2">
+            <h4 className="text-white font-serif font-bold text-lg mb-8">Our Locations</h4>
+            <div className="flex flex-row gap-8">
+              <div className="flex-1">
+                <h5 className="text-white font-sans text-[14px] font-semibold mb-2">Chennai Office</h5>
+                <a
+                  href="https://maps.google.com/?q=Meridian+Business+Centre,+OMR+Main+Road,+Thoraipakkam,+Chennai,+Tamil+Nadu+600097"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 hover:text-[#D97736] transition-colors group"
+                >
+                  <MapPin className="w-4 h-4 text-gray-400 group-hover:text-[#D97736] transition-colors shrink-0 mt-0.5" />
+                  <span className="text-gray-400 font-sans text-[14px] leading-relaxed group-hover:text-[#D97736] transition-colors">
+                    2nd Floor, Meridian Business Centre, OMR Main Road, Thoraipakkam, Chennai, Tamil Nadu - 600097
+                  </span>
+                </a>
+              </div>
+              <div className="flex-1">
+                <h5 className="text-white font-sans text-[14px] font-semibold mb-2">Thoothukudi Office</h5>
+                <a
+                  href="https://maps.google.com/?q=Pearl+City+Business+Hub,+Palayamkottai+Road,+Thoothukudi,+Tamil+Nadu+628003"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 hover:text-[#D97736] transition-colors group"
+                >
+                  <MapPin className="w-4 h-4 text-gray-400 group-hover:text-[#D97736] transition-colors shrink-0 mt-0.5" />
+                  <span className="text-gray-400 font-sans text-[14px] leading-relaxed group-hover:text-[#D97736] transition-colors">
+                    1st Floor, Pearl City Business Hub, Palayamkottai Road, Near VVD Signal, Thoothukudi, Tamil Nadu - 628003
+                  </span>
+                </a>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -126,7 +156,7 @@ const Footer = () => {
         </div>
 
         {/* Credit */}
-        <div className="mt-16 text-right">
+        <div className="mt-2 text-right">
           <span className="text-gray-500 font-sans text-[10px] tracking-wide opacity-80">
             Developed by Galletrix Innovations
           </span>

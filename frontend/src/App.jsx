@@ -41,9 +41,11 @@ function App() {
         const url = new URL(anchor.href);
         if (url.pathname !== window.location.pathname || url.search !== window.location.search) {
           e.preventDefault();
-          window.history.pushState(null, '', url.pathname + url.search);
+          window.history.pushState(null, '', url.pathname + url.search + url.hash);
           setCurrentPath(url.pathname);
-          window.scrollTo(0, 0);
+          if (!url.hash) {
+            window.scrollTo(0, 0);
+          }
         }
       }
     };

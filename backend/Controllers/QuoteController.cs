@@ -39,5 +39,31 @@ namespace backend.Controllers
             var quotes = _context.QuoteRequests.ToList();
             return Ok(quotes);
         }
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateQuote(int id, [FromBody] QuoteRequest updatedQuote)
+        {
+            if (id != updatedQuote.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(updatedQuote).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteQuote(int id)
+        {
+            var quote = await _context.QuoteRequests.FindAsync(id);
+            if (quote == null)
+            {
+                return NotFound();
+            }
+
+            _context.QuoteRequests.Remove(quote);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

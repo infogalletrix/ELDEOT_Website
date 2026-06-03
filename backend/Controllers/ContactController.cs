@@ -32,5 +32,31 @@ namespace backend.Controllers
 
             return Ok(contact);
         }
+        [HttpPut("{id}")]
+        public IActionResult UpdateContact(int id, [FromBody] Contact updatedContact)
+        {
+            if (id != updatedContact.Id)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(updatedContact).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+            _context.SaveChanges();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteContact(int id)
+        {
+            var contact = _context.Contacts.Find(id);
+            if (contact == null)
+            {
+                return NotFound();
+            }
+
+            _context.Contacts.Remove(contact);
+            _context.SaveChanges();
+            return NoContent();
+        }
     }
 }

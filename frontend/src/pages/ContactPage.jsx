@@ -16,6 +16,13 @@ const ContactPage = () => {
     message: ''
   });
   const [countryCode, setCountryCode] = useState('+91');
+  const [submitStatus, setSubmitStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const showNotification = (type, message) => {
+    setSubmitStatus({ type, message });
+    setTimeout(() => setSubmitStatus({ type: '', message: '' }), 5000);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,9 +39,10 @@ const ContactPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.phone.length !== 10) {
-      alert('Please enter a valid 10-digit phone number.');
+      showNotification('error', 'Please enter a valid 10-digit phone number.');
       return;
     }
+    setIsSubmitting(true);
     try {
       const submissionData = {
         ...formData,
@@ -48,7 +56,7 @@ const ContactPage = () => {
         body: JSON.stringify(submissionData)
       });
       if (response.ok) {
-        alert('Message sent successfully!');
+        showNotification('success', 'Message sent successfully! We will get back to you soon.');
         setFormData({
           name: '',
           email: '',
@@ -58,11 +66,13 @@ const ContactPage = () => {
         });
         setCountryCode('+91');
       } else {
-        alert('Failed to send message.');
+        showNotification('error', 'Failed to send message. Please try again.');
       }
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('An error occurred. Please try again.');
+      showNotification('error', 'An error occurred. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -308,12 +318,19 @@ const ContactPage = () => {
                 ></textarea>
               </div>
 
+              {submitStatus.message && (
+                <div className={`p-4 rounded-xl font-sans text-[15px] flex items-center gap-3 ${submitStatus.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+                  {submitStatus.message}
+                </div>
+              )}
+
               {/* Submit Button */}
               <button 
                 type="submit"
-                className="w-full h-14 bg-[#D97736] text-white rounded-xl font-sans font-medium text-[17px] flex items-center justify-center hover:bg-[#b86128] transition-colors mt-2"
+                disabled={isSubmitting}
+                className="w-full h-14 bg-[#D97736] text-white rounded-xl font-sans font-medium text-[17px] flex items-center justify-center hover:bg-[#b86128] transition-colors mt-2 disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                Send Message
+                {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
 
             </form>

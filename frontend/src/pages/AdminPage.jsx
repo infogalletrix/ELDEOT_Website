@@ -3,7 +3,7 @@ import {
   Lock, User, LayoutDashboard, Inbox, FileText, Sparkles, 
   LogOut, Search, Mail, Phone, Calendar, DollarSign, 
   ArrowRight, ShieldCheck, RefreshCw, Eye, ExternalLink, X,
-  Image as ImageIcon, Plus, Trash2, MapPin, Menu, Settings, Link
+  Image as ImageIcon, Plus, Trash2, MapPin, Menu, Settings, Link, Edit, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -67,8 +67,18 @@ const AdminPage = () => {
   const [newPortfolioCategory, setNewPortfolioCategory] = useState('Residential');
   const [newPortfolioImage, setNewPortfolioImage] = useState(null);
   const [newPortfolioImagePreview, setNewPortfolioImagePreview] = useState('');
+  const [newPortfolioAdditionalImages, setNewPortfolioAdditionalImages] = useState([]);
+  const [newPortfolioAdditionalPreviews, setNewPortfolioAdditionalPreviews] = useState([]);
   const [portfolioSubmitError, setPortfolioSubmitError] = useState('');
   const [isPortfolioSubmitting, setIsPortfolioSubmitting] = useState(false);
+
+  // Edit Portfolio Form State
+  const [editPortfolioImage, setEditPortfolioImage] = useState(null);
+  const [editPortfolioImagePreview, setEditPortfolioImagePreview] = useState('');
+  const [editPortfolioRetainedImages, setEditPortfolioRetainedImages] = useState([]);
+  const [editPortfolioAdditionalImages, setEditPortfolioAdditionalImages] = useState([]);
+  const [editPortfolioAdditionalPreviews, setEditPortfolioAdditionalPreviews] = useState([]);
+  const [editPortfolioError, setEditPortfolioError] = useState('');
 
   // New filter and session states
   const [quoteFilter, setQuoteFilter] = useState('all'); // all, provided, not-provided
@@ -81,20 +91,33 @@ const AdminPage = () => {
     }
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  const [editingItem, setEditingItem] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  const [toastStatus, setToastStatus] = useState({ type: '', message: '' });
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState(null);
 
-  // Helper: extract name, phone, and notes from QuoteRequest.AdditionalNotes
+  const showToast = (type, message) => {
+    setToastStatus({ type, message });
+    setTimeout(() => setToastStatus({ type: '', message: '' }), 5000);
+  };
+
+  // Helper: extract name, phone, email and notes from QuoteRequest.AdditionalNotes
   const parseQuoteNotes = (notes) => {
-    if (!notes) return { name: 'N/A', phone: 'N/A', customNotes: '' };
+    if (!notes) return { name: 'N/A', phone: 'N/A', email: 'N/A', customNotes: '' };
     
-    // Check if notes are formatted as "Name: ... | Phone: ... | Notes: ..."
     const nameMatch = notes.match(/Name:\s*([^|]+)/i);
     const phoneMatch = notes.match(/Phone:\s*([^|]+)/i);
+    const emailMatch = notes.match(/Email:\s*([^|]+)/i);
     const notesMatch = notes.match(/Notes:\s*(.+)/i);
 
     return {
       name: nameMatch ? nameMatch[1].trim() : 'N/A',
       phone: phoneMatch ? phoneMatch[1].trim() : 'N/A',
-      customNotes: notesMatch ? notesMatch[1].trim() : notes
+      email: emailMatch ? emailMatch[1].trim() : 'N/A',
+      customNotes: notesMatch ? notesMatch[1].trim() : 'Details captured from Calculator.'
     };
   };
 
@@ -211,6 +234,118 @@ const AdminPage = () => {
       setFetchError('Failed to parse database records. Please verify server status.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const promptDelete = (type, id) => {
+    setDeleteConfirmDialog({ type, id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmDialog) return;
+    const { type, id } = deleteConfirmDialog;
+    setDeleteConfirmDialog(null);
+    setIsDeleting(true);
+    
+    try {
+      if (type === 'portfolio') {
+        const res = await fetch(`${API_BASE_URL}/api/Portfolio/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          setPortfolioItems(prev => prev.filter(item => item.id !== id));
+          showToast('success', 'Portfolio item deleted successfully.');
+        } else {
+          showToast('error', 'Failed to delete portfolio item.');
+        }
+        return;
+      }
+
+      const endpoint = type === 'contact' ? 'Contact' : 'Quote';
+      const response = await fetch(`${API_BASE_URL}/api/${endpoint}/${id}`, {
+        method: 'DELETE'
+      });
+      if (response.ok) {
+        fetchDashboardData();
+        showToast('success', 'Record deleted successfully.');
+      } else {
+        showToast('error', 'Failed to delete record.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error deleting record.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditClick = (type, item) => {
+    setEditingItem({ type, data: { ...item } });
+    if (type === 'portfolio') {
+      setEditPortfolioImage(null);
+      setEditPortfolioImagePreview('');
+      
+      let existingAdditional = [];
+      if (item.additionalImages && item.additionalImages !== '[]') {
+        try {
+          existingAdditional = JSON.parse(item.additionalImages);
+        } catch(e){}
+      }
+      setEditPortfolioRetainedImages(existingAdditional);
+      
+      setEditPortfolioAdditionalImages([]);
+      setEditPortfolioAdditionalPreviews([]);
+      setEditPortfolioError('');
+    }
+  };
+
+  const handleEditSave = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      let response;
+      if (editingItem.type === 'portfolio') {
+        const formData = new FormData();
+        formData.append("Title", editingItem.data.title);
+        formData.append("Location", editingItem.data.location);
+        formData.append("Category", editingItem.data.category);
+        
+        if (editPortfolioImage) {
+          formData.append("Image", editPortfolioImage);
+        }
+        
+        formData.append("RetainedAdditionalImages", JSON.stringify(editPortfolioRetainedImages));
+
+        if (editPortfolioAdditionalImages.length > 0) {
+          editPortfolioAdditionalImages.forEach(img => {
+            formData.append("AdditionalImages", img);
+          });
+        }
+        
+        response = await fetch(`${API_BASE_URL}/api/Portfolio/${editingItem.data.id}`, {
+          method: 'PUT',
+          body: formData
+        });
+      } else {
+        const endpoint = editingItem.type === 'contact' ? 'Contact' : 'Quote';
+        response = await fetch(`${API_BASE_URL}/api/${endpoint}/${editingItem.data.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(editingItem.data)
+        });
+      }
+      if (response.ok) {
+        setEditingItem(null);
+        fetchDashboardData();
+        showToast('success', 'Record updated successfully.');
+      } else {
+        showToast('error', 'Failed to update record.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Error updating record.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -393,21 +528,8 @@ const AdminPage = () => {
     setLoginError('');
   };
 
-  const handleDeletePortfolioItem = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this portfolio item?")) return;
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/Portfolio/${id}`, {
-        method: 'DELETE'
-      });
-      if (res.ok) {
-        setPortfolioItems(prev => prev.filter(item => item.id !== id));
-      } else {
-        alert("Failed to delete portfolio item.");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error contacting server.");
-    }
+  const handleDeletePortfolioItem = (id) => {
+    promptDelete('portfolio', id);
   };
 
   const handleAddPortfolioItem = async (e) => {
@@ -451,6 +573,12 @@ const AdminPage = () => {
     formData.append("Location", newPortfolioLocation);
     formData.append("Category", newPortfolioCategory);
     formData.append("Image", newPortfolioImage);
+    
+    if (newPortfolioAdditionalImages.length > 0) {
+      newPortfolioAdditionalImages.forEach(img => {
+        formData.append("AdditionalImages", img);
+      });
+    }
 
     try {
       const res = await fetch(`${API_BASE_URL}/api/Portfolio`, {
@@ -467,6 +595,8 @@ const AdminPage = () => {
         setNewPortfolioCategory('Residential');
         setNewPortfolioImage(null);
         setNewPortfolioImagePreview('');
+        setNewPortfolioAdditionalImages([]);
+        setNewPortfolioAdditionalPreviews([]);
       } else {
         const errorData = await res.json().catch(() => ({}));
         setPortfolioSubmitError(errorData.message || "Failed to add portfolio item.");
@@ -509,6 +639,114 @@ const AdminPage = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleAdditionalImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    setPortfolioSubmitError('');
+    
+    if (files.length + newPortfolioAdditionalImages.length > 11) {
+      setPortfolioSubmitError("You can only upload a maximum of 11 additional images.");
+      return;
+    }
+
+    const validFiles = [];
+    const validPreviews = [];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.svg', '.avif', '.webp'];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 10 * 1024 * 1024) {
+        setPortfolioSubmitError("One of the additional images exceeds 10MB limit.");
+        return;
+      }
+      const fileName = file.name.toLowerCase();
+      const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+      if (!allowedExtensions.includes(fileExtension)) {
+        setPortfolioSubmitError("One of the additional images has an unsupported format.");
+        return;
+      }
+      validFiles.push(file);
+      validPreviews.push(URL.createObjectURL(file));
+    }
+
+    setNewPortfolioAdditionalImages(prev => [...prev, ...validFiles]);
+    setNewPortfolioAdditionalPreviews(prev => [...prev, ...validPreviews]);
+  };
+  
+  const removeAdditionalImage = (index) => {
+    setNewPortfolioAdditionalImages(prev => prev.filter((_, i) => i !== index));
+    setNewPortfolioAdditionalPreviews(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      URL.revokeObjectURL(prev[index]);
+      return updated;
+    });
+  };
+
+  const handleEditImageChange = (e) => {
+    const file = e.target.files[0];
+    setEditPortfolioError('');
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        setEditPortfolioError("Maximum file size allowed is 10MB.");
+        setEditPortfolioImage(null);
+        setEditPortfolioImagePreview('');
+        return;
+      }
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.svg', '.avif', '.webp'];
+      const fileName = file.name.toLowerCase();
+      const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+      if (!allowedExtensions.includes(fileExtension)) {
+        setEditPortfolioError("Unsupported image format.");
+        setEditPortfolioImage(null);
+        setEditPortfolioImagePreview('');
+        return;
+      }
+      setEditPortfolioImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditPortfolioImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleEditAdditionalImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    setEditPortfolioError('');
+    if (files.length + editPortfolioAdditionalImages.length > 11) {
+      setEditPortfolioError("You can only upload a maximum of 11 additional images.");
+      return;
+    }
+    const validFiles = [];
+    const validPreviews = [];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.svg', '.avif', '.webp'];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 10 * 1024 * 1024) {
+        setEditPortfolioError("One of the additional images exceeds 10MB limit.");
+        return;
+      }
+      const fileName = file.name.toLowerCase();
+      const fileExtension = fileName.substring(fileName.lastIndexOf('.'));
+      if (!allowedExtensions.includes(fileExtension)) {
+        setEditPortfolioError("One of the additional images has an unsupported format.");
+        return;
+      }
+      validFiles.push(file);
+      validPreviews.push(URL.createObjectURL(file));
+    }
+    setEditPortfolioAdditionalImages(prev => [...prev, ...validFiles]);
+    setEditPortfolioAdditionalPreviews(prev => [...prev, ...validPreviews]);
+  };
+  
+  const removeEditAdditionalImage = (index) => {
+    setEditPortfolioAdditionalImages(prev => prev.filter((_, i) => i !== index));
+    setEditPortfolioAdditionalPreviews(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      URL.revokeObjectURL(prev[index]);
+      return updated;
+    });
   };
 
   // Filter data based on active tab and search query
@@ -1352,13 +1590,27 @@ const AdminPage = () => {
                                 </div>
                               </td>
                               <td className="py-4 px-6 text-gray-500">{c.email || 'N/A'}</td>
-                              <td className="py-4 px-6 text-center">
+                              <td className="py-4 px-6 text-center whitespace-nowrap">
                                 <button 
                                   onClick={() => setSelectedItem({ type: 'contact', data: c })}
                                   className="p-2 hover:bg-[#D97736]/10 text-gray-500 hover:text-[#D97736] rounded-lg transition-all"
                                   title="View Message Detail"
                                 >
                                   <Eye className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => handleEditClick('contact', c)}
+                                  className="p-2 hover:bg-blue-500/10 text-gray-500 hover:text-blue-500 rounded-lg transition-all ml-1"
+                                  title="Edit Contact"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={() => promptDelete('contact', c.id)}
+                                  className="p-2 hover:bg-red-500/10 text-gray-500 hover:text-red-500 rounded-lg transition-all ml-1"
+                                  title="Delete Contact"
+                                >
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </td>
                             </tr>
@@ -1386,13 +1638,27 @@ const AdminPage = () => {
                                 <td className="py-4 px-6 text-gray-600">
                                   {q.materialQuality} <span className="text-gray-300 mx-1.5">•</span> {q.designComplexity}
                                 </td>
-                                <td className="py-4 px-6 text-center">
+                                <td className="py-4 px-6 text-center whitespace-nowrap">
                                   <button 
                                     onClick={() => setSelectedItem({ type: 'quote', data: q })}
                                     className="p-2 hover:bg-[#D97736]/10 text-gray-500 hover:text-[#D97736] rounded-lg transition-all"
                                     title="View Notes & Details"
                                   >
                                     <Eye className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleEditClick('quote', q)}
+                                    className="p-2 hover:bg-blue-500/10 text-gray-500 hover:text-blue-500 rounded-lg transition-all ml-1"
+                                    title="Edit Quote"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => promptDelete('quote', q.id)}
+                                    className="p-2 hover:bg-red-500/10 text-gray-500 hover:text-red-500 rounded-lg transition-all ml-1"
+                                    title="Delete Quote"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
                                   </button>
                                 </td>
                               </tr>
@@ -1505,7 +1771,7 @@ const AdminPage = () => {
                       </div>
 
                       <div>
-                        <label className="block text-gray-700 text-xs font-semibold uppercase tracking-wider mb-2">Interior Photo *</label>
+                        <label className="block text-gray-700 text-xs font-semibold uppercase tracking-wider mb-2">Interior Photo (Main) *</label>
                         <div className="border-2 border-dashed border-gray-200 rounded-2xl p-5 text-center hover:border-[#D97736]/40 transition-colors relative bg-gray-50/30">
                           <input 
                             type="file"
@@ -1521,18 +1787,54 @@ const AdminPage = () => {
                                 alt="Preview" 
                                 className="max-h-[140px] mx-auto rounded-lg object-cover" 
                               />
-                              <p className="text-xs text-gray-500 font-medium">Click or drag to replace image</p>
+                              <p className="text-xs text-gray-500 font-medium">Click or drag to replace main image</p>
                             </div>
                           ) : (
                             <div className="space-y-2">
                               <div className="w-10 h-10 bg-[#FAF7F2] rounded-full flex items-center justify-center mx-auto text-[#D97736]">
                                 <ImageIcon className="w-5 h-5" />
                               </div>
-                              <p className="text-xs font-semibold text-gray-700">Upload Image</p>
+                              <p className="text-xs font-semibold text-gray-700">Upload Main Image</p>
                               <p className="text-[10px] text-gray-400">JPEG, PNG, SVG, AVIF, WEBP (Max 10MB)</p>
                             </div>
                           )}
                         </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 text-xs font-semibold uppercase tracking-wider mb-2">Additional Images (Up to 11)</label>
+                        <div className="border-2 border-dashed border-gray-200 rounded-2xl p-5 text-center hover:border-[#D97736]/40 transition-colors relative bg-gray-50/30">
+                          <input 
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.svg,.avif,.webp,image/jpeg,image/png,image/svg+xml,image/avif,image/webp"
+                            multiple
+                            onChange={handleAdditionalImagesChange}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="space-y-2">
+                            <div className="w-10 h-10 bg-[#FAF7F2] rounded-full flex items-center justify-center mx-auto text-[#D97736]">
+                              <Plus className="w-5 h-5" />
+                            </div>
+                            <p className="text-xs font-semibold text-gray-700">Upload Additional Images</p>
+                            <p className="text-[10px] text-gray-400">Select multiple files (Max 10MB each)</p>
+                          </div>
+                        </div>
+                        {newPortfolioAdditionalPreviews.length > 0 && (
+                          <div className="mt-4 grid grid-cols-3 gap-2">
+                            {newPortfolioAdditionalPreviews.map((preview, index) => (
+                              <div key={index} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                                <img src={preview} alt={`Additional ${index}`} className="w-full h-16 object-cover" />
+                                <button 
+                                  type="button"
+                                  onClick={() => removeAdditionalImage(index)}
+                                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-4 h-4 text-white" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {portfolioSubmitError && (
@@ -1624,13 +1926,22 @@ const AdminPage = () => {
                                       System Default
                                     </span>
                                   ) : (
-                                    <button 
-                                      onClick={() => handleDeletePortfolioItem(p.id)}
-                                      className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-all"
-                                      title="Delete Portfolio Item"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <>
+                                      <button 
+                                        onClick={() => handleEditClick('portfolio', p)}
+                                        className="p-2 hover:bg-blue-50 text-gray-400 hover:text-blue-500 rounded-lg transition-all"
+                                        title="Edit Portfolio Item"
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+                                      <button 
+                                        onClick={() => handleDeletePortfolioItem(p.id)}
+                                        className="p-2 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-lg transition-all ml-1"
+                                        title="Delete Portfolio Item"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </>
                                   )}
                                 </td>
                               </tr>
@@ -1862,6 +2173,13 @@ const AdminPage = () => {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-xs text-gray-400 font-sans font-semibold uppercase tracking-wider mb-1">Email Address</p>
+                        <p className="font-sans font-semibold text-gray-700">{parsed.email}</p>
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-b border-gray-100 py-6">
                       <div>
                         <p className="text-xs text-gray-400 font-sans font-semibold uppercase tracking-wider mb-1">Room Size (sq.ft)</p>
@@ -1975,6 +2293,245 @@ const AdminPage = () => {
               */}
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteConfirmDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setDeleteConfirmDialog(null)}
+          />
+          <div className="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+            <h3 className="font-sans font-bold text-[18px] text-gray-900 mb-2">Delete Record?</h3>
+            <p className="text-gray-500 font-sans text-sm mb-6">
+              Are you sure you want to delete this {deleteConfirmDialog.type}? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button 
+                onClick={() => setDeleteConfirmDialog(null)}
+                className="flex-1 py-2.5 rounded-xl border font-sans font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="flex-1 py-2.5 rounded-xl bg-red-600 font-sans font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST NOTIFICATION */}
+      <AnimatePresence>
+        {toastStatus.message && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className={`fixed bottom-6 right-6 z-[70] px-5 py-3 rounded-xl shadow-lg font-sans text-[15px] font-medium flex items-center gap-3 ${
+              toastStatus.type === 'error' ? 'bg-white text-red-600 border border-red-100' : 'bg-[#D97736] text-white'
+            }`}
+          >
+            {toastStatus.type === 'error' ? (
+              <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center shrink-0">
+                <X className="w-4 h-4 text-red-600" />
+              </div>
+            ) : (
+              <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4 text-white" />
+              </div>
+            )}
+            {toastStatus.message}
+            <button onClick={() => setToastStatus({ type: '', message: '' })} className="ml-2 opacity-60 hover:opacity-100 cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* EDIT MODAL */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setEditingItem(null)}
+          />
+          <div 
+            className="relative bg-white w-full max-w-xl rounded-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <h3 className="font-sans font-bold text-[20px] text-gray-800">
+                Edit {editingItem.type === 'contact' ? 'Contact' : editingItem.type === 'quote' ? 'Quote' : 'Portfolio Item'}
+              </h3>
+              <button 
+                onClick={() => setEditingItem(null)}
+                className="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditSave} className="overflow-y-auto p-6 space-y-4 font-sans text-left">
+              {editingItem.type === 'contact' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.name || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, name: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email</label>
+                    <input type="email" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.email || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, email: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.phone || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, phone: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Service Needed</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.serviceNeeded || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, serviceNeeded: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Message</label>
+                    <textarea className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" rows="4" value={editingItem.data.message || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, message: e.target.value}})}></textarea>
+                  </div>
+                </>
+              )}
+
+              {editingItem.type === 'quote' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Room Size</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.roomSize || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, roomSize: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Room Type</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.roomType || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, roomType: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Material Quality</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.materialQuality || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, materialQuality: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Design Complexity</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.designComplexity || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, designComplexity: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Additional Notes</label>
+                    <textarea className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" rows="4" value={editingItem.data.additionalNotes || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, additionalNotes: e.target.value}})}></textarea>
+                  </div>
+                </>
+              )}
+
+              {editingItem.type === 'portfolio' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Project Title</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.title || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, title: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Location</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.location || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, location: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
+                    <select className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736] bg-white" value={editingItem.data.category || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, category: e.target.value}})}>
+                      <option value="Residential">Residential</option>
+                      <option value="Commercial">Commercial</option>
+                      <option value="Office">Office</option>
+                      <option value="Hospitality">Hospitality</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Replace Main Image (Optional)</label>
+                    <input 
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.svg,.avif,.webp"
+                      onChange={handleEditImageChange}
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#FAF7F2] file:text-[#D97736] hover:file:bg-[#f0e8dc]"
+                    />
+                    {editPortfolioImagePreview && (
+                      <img src={editPortfolioImagePreview} alt="Preview" className="mt-2 h-20 rounded object-cover" />
+                    )}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Additional Images</label>
+                    <div className="mb-2 text-xs text-gray-500">
+                      Manage existing images or add new ones (Maximum 11 total).
+                    </div>
+                    
+                    {editPortfolioRetainedImages.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">Currently Saved Images:</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {editPortfolioRetainedImages.map((imgPath, index) => (
+                            <div key={index} className="relative group rounded overflow-hidden border border-gray-200">
+                              <img src={`${API_BASE_URL}${imgPath}`} alt={`Saved ${index}`} className="w-full h-12 object-cover" />
+                              <button 
+                                type="button"
+                                onClick={() => setEditPortfolioRetainedImages(prev => prev.filter((_, i) => i !== index))}
+                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4 text-red-400" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <input 
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.svg,.avif,.webp"
+                      onChange={handleEditAdditionalImagesChange}
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#FAF7F2] file:text-[#D97736] hover:file:bg-[#f0e8dc]"
+                    />
+                    {editPortfolioAdditionalPreviews.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">New Images to Upload:</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {editPortfolioAdditionalPreviews.map((preview, index) => (
+                            <div key={index} className="relative group rounded overflow-hidden border border-gray-200">
+                              <img src={preview} alt={`Edit Additional ${index}`} className="w-full h-12 object-cover" />
+                              <button 
+                                type="button"
+                                onClick={() => removeEditAdditionalImage(index)}
+                                className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4 text-white" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {editPortfolioError && (
+                    <div className="text-red-500 text-xs mt-1">{editPortfolioError}</div>
+                  )}
+                </>
+              )}
+
+              <div className="pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setEditingItem(null)} className="px-5 py-2 text-gray-600 font-semibold border rounded-xl hover:bg-gray-50 transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" disabled={isSaving} className="px-5 py-2 bg-[#D97736] text-white font-semibold rounded-xl hover:bg-[#b86128] disabled:opacity-50 transition-colors cursor-pointer">
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

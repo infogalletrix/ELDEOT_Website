@@ -47,6 +47,20 @@ const Navbar = ({ isTransparent = true, activeLink = 'Home' }) => {
               </a>
             </li>
           ))}
+          <li className={`flex items-center gap-5 border-l ${isTransparent ? 'border-white/20' : 'border-gray-200'} pl-6 ml-2`}>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className={`${linkTextClass} hover:text-[#D97736] transition-transform hover:scale-110`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+              </svg>
+            </a>
+            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className={`${linkTextClass} hover:text-[#D97736] transition-transform hover:scale-110`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+              </svg>
+            </a>
+          </li>
         </ul>
 
 
@@ -77,7 +91,21 @@ const Navbar = ({ isTransparent = true, activeLink = 'Home' }) => {
                 </a>
               </li>
             ))}
-
+            
+            <li className="flex items-center gap-6 mt-4 pt-6 border-t border-white/10">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-[#D97736] transition-transform hover:scale-110">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                </svg>
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-[#D97736] transition-transform hover:scale-110">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                </svg>
+              </a>
+            </li>
           </ul>
         </div>
       )}

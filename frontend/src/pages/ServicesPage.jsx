@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Home, Building2, Store, CheckCircle2, ArrowRight, Lightbulb, PenTool, Ruler, Paintbrush } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -8,6 +8,27 @@ import servicesImage2 from '../assets/service3a.png';
 import servicesImage3 from '../assets/service4a.png';
 
 const ServicesPage = () => {
+
+  useEffect(() => {
+    const handleScrollToHash = () => {
+      if (window.location.hash) {
+        setTimeout(() => {
+          const element = document.getElementById(window.location.hash.slice(1));
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 100);
+      } else {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    handleScrollToHash();
+    
+    // Listen for hash changes if navigating within the same page
+    window.addEventListener('hashchange', handleScrollToHash);
+    return () => window.removeEventListener('hashchange', handleScrollToHash);
+  }, []);
   const homeServiceFeatures = [
     "Living Room & Bedroom Design",
     "Custom Furniture Selection",
@@ -92,7 +113,7 @@ const ServicesPage = () => {
       </section>
 
       {/* Detailed Service Section 1 (Home) */}
-      <section className="py-24 px-4 md:px-6 lg:px-12 bg-white">
+      <section id="home-interior" className="py-24 px-4 md:px-6 lg:px-12 bg-white">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           
           {/* Left Image */}
@@ -144,7 +165,7 @@ const ServicesPage = () => {
       </section>
 
       {/* Detailed Service Section 2 (Office) */}
-      <section className="py-24 px-4 md:px-6 lg:px-12 bg-[#FAF7F2]">
+      <section id="office-design" className="py-24 px-4 md:px-6 lg:px-12 bg-[#FAF7F2]">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           
           {/* Left Content */}
@@ -197,7 +218,7 @@ const ServicesPage = () => {
       </section>
 
       {/* Detailed Service Section 3 (Commercial) */}
-      <section className="py-24 px-4 md:px-6 lg:px-12 bg-white">
+      <section id="commercial-design" className="py-24 px-4 md:px-6 lg:px-12 bg-white">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
           
           {/* Left Image */}

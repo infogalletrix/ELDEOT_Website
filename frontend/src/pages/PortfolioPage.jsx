@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import portfolioBg from '../assets/portfoliocover.png';
@@ -13,6 +13,64 @@ import p2c1 from '../assets/p2c1.png';
 import p2c2 from '../assets/p2c2.png';
 import { API_BASE_URL } from '../config';
 
+const ProjectCard = ({ project }) => {
+  const images = [project.image, ...(project.additionalImages || [])];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const prevImage = () => {
+    setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const nextImage = () => {
+    setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  return (
+    <div className="bg-white rounded-[24px] border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300">
+      <div className="relative w-full h-[280px] group">
+        <img src={images[currentIndex]} alt={project.title} className="w-full h-full object-cover transition-opacity duration-500" />
+        
+        {images.length > 1 && (
+          <>
+            <button 
+              onClick={prevImage}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white backdrop-blur-md p-1.5 rounded-full text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={nextImage}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 hover:bg-white backdrop-blur-md p-1.5 rounded-full text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {images.map((_, idx) => (
+                <div 
+                  key={idx} 
+                  className={`w-1.5 h-1.5 rounded-full transition-colors ${idx === currentIndex ? 'bg-white' : 'bg-white/40'}`} 
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <div className="p-8">
+        <h3 className="text-[26px] font-bold font-serif text-[#1A1A1A] mb-3">
+          {project.title}
+        </h3>
+        <div className="flex items-center gap-2 mb-6">
+          <MapPin className="w-[18px] h-[18px] text-[#D97736]" />
+          <span className="text-[#666666] font-sans text-[15px]">{project.location}</span>
+        </div>
+        <div className="inline-block bg-[#FAF7F2] text-[#D97736] px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.05em] uppercase">
+          {project.category}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const PortfolioPage = () => {
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [dbProjects, setDbProjects] = useState([]);
@@ -25,13 +83,24 @@ const PortfolioPage = () => {
         throw new Error("Backend responded with error");
       })
       .then(data => {
-        const formatted = data.map(item => ({
-          id: `db-${item.id}`,
-          title: item.title,
-          location: item.location,
-          category: item.category,
-          image: `${API_BASE_URL}${item.imagePath}`
-        }));
+        const formatted = data.map(item => {
+          let addImages = [];
+          try {
+            if (item.additionalImages && item.additionalImages !== '[]') {
+              addImages = JSON.parse(item.additionalImages).map(p => `${API_BASE_URL}${p}`);
+            }
+          } catch (e) {
+            console.error("Failed to parse additional images for item:", item.id);
+          }
+          return {
+            id: `db-${item.id}`,
+            title: item.title,
+            location: item.location,
+            category: item.category,
+            image: `${API_BASE_URL}${item.imagePath}`,
+            additionalImages: addImages
+          };
+        });
         setDbProjects(formatted);
         setUseFallback(false);
       })
@@ -90,33 +159,7 @@ const PortfolioPage = () => {
             From residential havens to commercial landmarks, we bring creativity and expertise to every project.
           </p>
 
-          {/* Transparent Glassmorphism Social Icons */}
-          <div className="flex items-center gap-5 mt-6">
-            <a 
-              href="https://facebook.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white hover:text-[#D97736] hover:border-[#D97736]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg"
-              aria-label="Facebook"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-              </svg>
-            </a>
-            <a 
-              href="https://instagram.com" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white hover:text-[#D97736] hover:border-[#D97736]/30 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-lg"
-              aria-label="Instagram"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-              </svg>
-            </a>
-          </div>
+
         </div>
       </section>
 
@@ -146,23 +189,7 @@ const PortfolioPage = () => {
           {/* Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProjects.map((project) => (
-              <div key={project.id} className="bg-white rounded-[24px] border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300">
-                <div className="w-full h-[280px]">
-                  <img src={project.image} alt={project.title} className="w-full h-full object-cover" />
-                </div>
-                <div className="p-8">
-                  <h3 className="text-[26px] font-bold font-serif text-[#1A1A1A] mb-3">
-                    {project.title}
-                  </h3>
-                  <div className="flex items-center gap-2 mb-6">
-                    <MapPin className="w-[18px] h-[18px] text-[#D97736]" />
-                    <span className="text-[#666666] font-sans text-[15px]">{project.location}</span>
-                  </div>
-                  <div className="inline-block bg-[#FAF7F2] text-[#D97736] px-4 py-1.5 rounded-full text-xs font-semibold tracking-[0.05em] uppercase">
-                    {project.category}
-                  </div>
-                </div>
-              </div>
+              <ProjectCard key={project.id} project={project} />
             ))}
           </div>
 
