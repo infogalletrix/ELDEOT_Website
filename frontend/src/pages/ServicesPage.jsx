@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Home, Building2, Store, CheckCircle2, ArrowRight, Lightbulb, PenTool, Ruler, Paintbrush } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -6,6 +7,13 @@ import servicesHeroBg from '../assets/2.png';
 import servicesImage1 from '../assets/services 2a.png';
 import servicesImage2 from '../assets/service3a.png';
 import servicesImage3 from '../assets/service4a.png';
+import {
+  fadeLeftVariant,
+  fadeRightVariant,
+  staggerContainerVariant,
+  staggerItemVariant,
+  viewportOptions
+} from '../hooks/useScrollAnimation';
 
 const ServicesPage = () => {
 
@@ -99,34 +107,46 @@ const ServicesPage = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 md:px-6 text-center text-white flex flex-col items-center pt-24">
-          <p className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-6 drop-shadow-md">
+        <motion.div
+          className="relative z-10 w-full max-w-4xl mx-auto px-4 md:px-6 text-center text-white flex flex-col items-center pt-24"
+          variants={staggerContainerVariant}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.p variants={staggerItemVariant} className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-6 drop-shadow-md">
             OUR SERVICES
-          </p>
-          <h1 className="text-5xl md:text-[64px] font-bold font-serif mb-8 leading-[1.1] drop-shadow-lg">
+          </motion.p>
+          <motion.h1 variants={staggerItemVariant} className="text-5xl md:text-[64px] font-bold font-serif mb-8 leading-[1.1] drop-shadow-lg">
             Design Solutions for <br /> Every Space
-          </h1>
-          <p className="text-lg md:text-xl text-gray-200 font-sans leading-relaxed max-w-[700px] drop-shadow-md">
+          </motion.h1>
+          <motion.p variants={staggerItemVariant} className="text-lg md:text-xl text-gray-200 font-sans leading-relaxed max-w-[700px] drop-shadow-md">
             From residential havens to commercial landmarks, we bring creativity and expertise to every project.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
       </section>
 
       {/* Detailed Service Section 1 (Home) */}
       <section id="home-interior" className="py-24 px-4 md:px-6 lg:px-12 bg-white">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-          
           {/* Left Image */}
-          <div className="w-full relative rounded-2xl overflow-hidden shadow-lg">
-            <img 
-              src={servicesImage1} 
-              alt="Home Interior Design" 
-              className="w-full h-auto object-cover"
-            />
-          </div>
+          <motion.div
+            variants={fadeLeftVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="w-full relative rounded-2xl overflow-hidden shadow-lg"
+          >
+            <img src={servicesImage1} alt="Home Interior Design" className="w-full h-auto object-cover" />
+          </motion.div>
 
           {/* Right Content */}
-          <div className="flex flex-col items-start">
+          <motion.div
+            variants={fadeRightVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="flex flex-col items-start"
+          >
             {/* Icon */}
             <div className="mb-6">
               <Home className="w-[42px] h-[42px] text-[#D97736]" strokeWidth={2} />
@@ -160,16 +180,21 @@ const ServicesPage = () => {
               Get a Quote
               <ArrowRight className="w-5 h-5 ml-1" />
             </a>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Detailed Service Section 2 (Office) */}
       <section id="office-design" className="py-24 px-4 md:px-6 lg:px-12 bg-[#FAF7F2]">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-          
           {/* Left Content */}
-          <div className="flex flex-col items-start order-2 lg:order-1">
+          <motion.div
+            variants={fadeLeftVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="flex flex-col items-start order-2 lg:order-1"
+          >
             {/* Icon */}
             <div className="mb-6">
               <Building2 className="w-[42px] h-[42px] text-[#D97736]" strokeWidth={2} />
@@ -203,35 +228,43 @@ const ServicesPage = () => {
               Get a Quote
               <ArrowRight className="w-5 h-5 ml-1" />
             </a>
-          </div>
+          </motion.div>
 
           {/* Right Image */}
-          <div className="w-full relative rounded-2xl overflow-hidden shadow-lg order-1 lg:order-2">
-            <img 
-              src={servicesImage2} 
-              alt="Office Interior Design" 
-              className="w-full h-auto object-cover"
-            />
-          </div>
-
+          <motion.div
+            variants={fadeRightVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="w-full relative rounded-2xl overflow-hidden shadow-lg order-1 lg:order-2"
+          >
+            <img src={servicesImage2} alt="Office Interior Design" className="w-full h-auto object-cover" />
+          </motion.div>
         </div>
       </section>
 
       {/* Detailed Service Section 3 (Commercial) */}
       <section id="commercial-design" className="py-24 px-4 md:px-6 lg:px-12 bg-white">
         <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
-          
           {/* Left Image */}
-          <div className="w-full relative rounded-2xl overflow-hidden shadow-lg">
-            <img 
-              src={servicesImage3} 
-              alt="Commercial Design" 
-              className="w-full h-auto object-cover"
-            />
-          </div>
+          <motion.div
+            variants={fadeLeftVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="w-full relative rounded-2xl overflow-hidden shadow-lg"
+          >
+            <img src={servicesImage3} alt="Commercial Design" className="w-full h-auto object-cover" />
+          </motion.div>
 
           {/* Right Content */}
-          <div className="flex flex-col items-start">
+          <motion.div
+            variants={fadeRightVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="flex flex-col items-start"
+          >
             {/* Icon */}
             <div className="mb-6">
               <Store className="w-[42px] h-[42px] text-[#D97736]" strokeWidth={2} />
@@ -265,45 +298,54 @@ const ServicesPage = () => {
               Get a Quote
               <ArrowRight className="w-5 h-5 ml-1" />
             </a>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Process Section */}
       <section className="py-24 px-4 md:px-6 lg:px-12 bg-[#FAF7F2]">
         <div className="max-w-[1400px] mx-auto text-center">
-          <p className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-4">
+          <motion.p
+            variants={staggerItemVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-4"
+          >
             OUR PROCESS
-          </p>
-          <h2 className="text-4xl md:text-5xl font-bold font-serif text-[#1A1A1A] mb-20">
+          </motion.p>
+          <motion.h2
+            variants={staggerItemVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+            className="text-4xl md:text-5xl font-bold font-serif text-[#1A1A1A] mb-20"
+          >
             How We Work
-          </h2>
+          </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8"
+            variants={staggerContainerVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+          >
             {processSteps.map((item, index) => (
-              <div key={index} className="flex flex-col items-center">
+              <motion.div key={index} variants={staggerItemVariant} className="flex flex-col items-center">
                 {/* Icon Container */}
                 <div className="w-20 h-20 bg-[#E8E2D9] rounded-2xl flex items-center justify-center mb-8 shadow-sm">
                   {item.icon}
                 </div>
-                
                 {/* Step Label */}
-                <p className="text-[#D97736] font-sans font-medium mb-3">
-                  {item.step}
-                </p>
-
+                <p className="text-[#D97736] font-sans font-medium mb-3">{item.step}</p>
                 {/* Heading */}
-                <h3 className="text-2xl font-bold font-serif text-[#1A1A1A] mb-4">
-                  {item.title}
-                </h3>
-
+                <h3 className="text-2xl font-bold font-serif text-[#1A1A1A] mb-4">{item.title}</h3>
                 {/* Description */}
-                <p className="text-[#666666] font-sans leading-relaxed max-w-[280px]">
-                  {item.description}
-                </p>
-              </div>
+                <p className="text-[#666666] font-sans leading-relaxed max-w-[280px]">{item.description}</p>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 

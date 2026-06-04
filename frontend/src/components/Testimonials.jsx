@@ -1,5 +1,11 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
+import {
+  staggerContainerVariant,
+  staggerItemVariant,
+  viewportOptions
+} from '../hooks/useScrollAnimation';
 
 const Testimonials = () => {
   const testimonials = [
@@ -23,22 +29,41 @@ const Testimonials = () => {
   return (
     <section className="bg-[#FAF7F2] pt-16 pb-24 px-4 md:px-6 lg:px-12">
       <div className="max-w-[1400px] mx-auto">
-        
+
         {/* Header */}
-        <div className="text-center mb-16">
-          <p className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-4">
+        <motion.div
+          className="text-center mb-16"
+          variants={staggerContainerVariant}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOptions}
+        >
+          <motion.p
+            variants={staggerItemVariant}
+            className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-4"
+          >
             TESTIMONIALS
-          </p>
-          <h2 className="text-5xl md:text-6xl font-bold font-serif text-[#1A1A1A]">
+          </motion.p>
+          <motion.h2
+            variants={staggerItemVariant}
+            className="text-5xl md:text-6xl font-bold font-serif text-[#1A1A1A]"
+          >
             What Our Clients Say
-          </h2>
-        </div>
+          </motion.h2>
+        </motion.div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-3 gap-8"
+          variants={staggerContainerVariant}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOptions}
+        >
           {testimonials.map((testimonial, index) => (
-            <div 
-              key={index} 
+            <motion.div
+              key={index}
+              variants={staggerItemVariant}
               className="bg-white rounded-[2rem] p-10 flex flex-col shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300"
             >
               {/* Quote Icon */}
@@ -67,9 +92,9 @@ const Testimonials = () => {
                   {testimonial.role}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
 
       </div>
     </section>

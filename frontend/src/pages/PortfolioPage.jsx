@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -12,6 +13,12 @@ import p2b3 from '../assets/p2b3.png';
 import p2c1 from '../assets/p2c1.png';
 import p2c2 from '../assets/p2c2.png';
 import { API_BASE_URL } from '../config';
+import {
+  staggerContainerVariant,
+  staggerItemVariant,
+  fadeUpVariant,
+  viewportOptions
+} from '../hooks/useScrollAnimation';
 
 const ProjectCard = ({ project }) => {
   const images = [project.image, ...(project.additionalImages || [])];
@@ -26,7 +33,13 @@ const ProjectCard = ({ project }) => {
   };
 
   return (
-    <div className="bg-white rounded-[24px] border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300">
+    <motion.div
+      variants={staggerItemVariant}
+      initial="hidden"
+      whileInView="visible"
+      viewport={viewportOptions}
+      className="bg-white rounded-[24px] border border-gray-100 overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-300"
+    >
       <div className="relative w-full h-[280px] group">
         <img src={images[currentIndex]} alt={project.title} className="w-full h-full object-cover transition-opacity duration-500" />
         
@@ -67,7 +80,7 @@ const ProjectCard = ({ project }) => {
           {project.category}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -148,19 +161,22 @@ const PortfolioPage = () => {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 w-full max-w-4xl mx-auto px-4 md:px-6 text-center text-white flex flex-col items-center pt-24">
-          <p className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-6 drop-shadow-md">
+        <motion.div
+          className="relative z-10 w-full max-w-4xl mx-auto px-4 md:px-6 text-center text-white flex flex-col items-center pt-24"
+          variants={staggerContainerVariant}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.p variants={staggerItemVariant} className="text-[#D97736] font-sans font-medium tracking-widest uppercase text-sm mb-6 drop-shadow-md">
             OUR SERVICES
-          </p>
-          <h1 className="text-5xl md:text-[64px] font-bold font-serif mb-8 leading-[1.1] drop-shadow-lg">
+          </motion.p>
+          <motion.h1 variants={staggerItemVariant} className="text-5xl md:text-[64px] font-bold font-serif mb-8 leading-[1.1] drop-shadow-lg">
             Design Solutions for <br /> Every Space
-          </h1>
-          <p className="text-lg md:text-xl text-gray-200 font-sans leading-relaxed max-w-[700px] drop-shadow-md mb-8">
+          </motion.h1>
+          <motion.p variants={staggerItemVariant} className="text-lg md:text-xl text-gray-200 font-sans leading-relaxed max-w-[700px] drop-shadow-md mb-8">
             From residential havens to commercial landmarks, we bring creativity and expertise to every project.
-          </p>
-
-
-        </div>
+          </motion.p>
+        </motion.div>
       </section>
 
       {/* Portfolio Grid Section */}
@@ -168,7 +184,13 @@ const PortfolioPage = () => {
         <div className="max-w-[1400px] mx-auto">
           
           {/* Filters */}
-          <div className="flex justify-center mb-16 px-4">
+          <motion.div
+            className="flex justify-center mb-16 px-4"
+            variants={fadeUpVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+          >
             <div className="flex flex-wrap sm:inline-flex items-center justify-center gap-2.5 sm:gap-2 bg-transparent sm:bg-[#F5F2ED] p-0 sm:p-1.5 rounded-full max-w-full">
               {categories.map((cat) => (
                 <button
@@ -184,14 +206,20 @@ const PortfolioPage = () => {
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            variants={staggerContainerVariant}
+            initial="hidden"
+            whileInView="visible"
+            viewport={viewportOptions}
+          >
             {filteredProjects.map((project) => (
               <ProjectCard key={project.id} project={project} />
             ))}
-          </div>
+          </motion.div>
 
         </div>
       </section>

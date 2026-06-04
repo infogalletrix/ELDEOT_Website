@@ -1,17 +1,29 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import logoImg from '../assets/GREY logo.jpg';
 import whatsappLogoImg from '../assets/WhatsApp-BW-Logo.png';
+import {
+  staggerContainerVariant,
+  staggerItemVariant,
+  viewportOptions
+} from '../hooks/useScrollAnimation';
 
 const Footer = () => {
   return (
     <footer className="bg-[#2c2825] pt-20 pb-3 px-8 lg:px-16">
       <div className="max-w-[1400px] mx-auto">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8"
+          variants={staggerContainerVariant}
+          initial="hidden"
+          whileInView="visible"
+          viewport={viewportOptions}
+        >
           
           {/* Column 1: Brand */}
-          <div className="flex flex-col items-start">
+          <motion.div variants={staggerItemVariant} className="flex flex-col items-start">
             <div className="flex items-center gap-3 mb-6 cursor-pointer">
               <img 
                 src={logoImg} 
@@ -34,10 +46,10 @@ const Footer = () => {
                 </svg>
               </a>
             </div>
-          </div>
+          </motion.div>
 
           {/* Column 2: Quick Links */}
-          <div>
+          <motion.div variants={staggerItemVariant}>
             <h4 className="text-white font-serif font-bold text-lg mb-8">Quick Links</h4>
             <ul className="flex flex-col gap-4">
               {[
@@ -52,10 +64,10 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Column 3: Services */}
-          <div>
+          <motion.div variants={staggerItemVariant}>
             <h4 className="text-white font-serif font-bold text-lg mb-8">Services</h4>
             <ul className="flex flex-col gap-4">
               {[
@@ -70,10 +82,10 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Column 4: Contact */}
-          <div>
+          <motion.div variants={staggerItemVariant}>
             <h4 className="text-white font-serif font-bold text-lg mb-8">Contact</h4>
             <ul className="flex flex-col gap-5">
               <li className="text-gray-400 font-sans text-[15px]">
@@ -109,10 +121,10 @@ const Footer = () => {
               </li>
 
             </ul>
-          </div>
+          </motion.div>
 
           {/* Column 5-6: Our Locations */}
-          <div className="lg:col-span-2">
+          <motion.div variants={staggerItemVariant} className="lg:col-span-2">
             <h4 className="text-white font-serif font-bold text-lg mb-8">Our Locations</h4>
             <div className="flex flex-row gap-8">
               <div className="flex-1">
@@ -144,9 +156,9 @@ const Footer = () => {
                 </a>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-        </div>
+        </motion.div>
 
         {/* Copyright */}
         <div className="mt-6 pt-3 border-t border-white/10 text-center">
