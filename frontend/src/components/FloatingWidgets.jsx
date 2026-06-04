@@ -149,7 +149,7 @@ const FloatingWidgets = () => {
         message: 'Submitted via Chatbot inquiry form',
         serviceNeeded: 'Chatbot Lead'
       };
-      const response = await fetch(`${API_BASE_URL}/api/Contact`, {
+      const response = await fetch(`${API_BASE_URL}/Contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

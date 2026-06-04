@@ -192,10 +192,10 @@ const AdminPage = () => {
     try {
       // Parallel fetches from backend controllers including portfolio items
       const [contactsRes, quotesRes, aiRes, portfolioRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/Contact`).catch(() => null),
-        fetch(`${API_BASE_URL}/api/Quote`).catch(() => null),
-        fetch(`${API_BASE_URL}/api/AIDesign`).catch(() => null),
-        fetch(`${API_BASE_URL}/api/Portfolio`).catch(() => null)
+        fetch(`${API_BASE_URL}/Contact`).catch(() => null),
+        fetch(`${API_BASE_URL}/Quote`).catch(() => null),
+        fetch(`${API_BASE_URL}/AIDesign`).catch(() => null),
+        fetch(`${API_BASE_URL}/Portfolio`).catch(() => null)
       ]);
 
       let fetchedContacts = [];
@@ -249,7 +249,7 @@ const AdminPage = () => {
     
     try {
       if (type === 'portfolio') {
-        const res = await fetch(`${API_BASE_URL}/api/Portfolio/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_BASE_URL}/Portfolio/${id}`, { method: 'DELETE' });
         if (res.ok) {
           setPortfolioItems(prev => prev.filter(item => item.id !== id));
           showToast('success', 'Portfolio item deleted successfully.');
@@ -260,7 +260,7 @@ const AdminPage = () => {
       }
 
       const endpoint = type === 'contact' ? 'Contact' : 'Quote';
-      const response = await fetch(`${API_BASE_URL}/api/${endpoint}/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
         method: 'DELETE'
       });
       if (response.ok) {
@@ -320,13 +320,13 @@ const AdminPage = () => {
           });
         }
         
-        response = await fetch(`${API_BASE_URL}/api/Portfolio/${editingItem.data.id}`, {
+        response = await fetch(`${API_BASE_URL}/Portfolio/${editingItem.data.id}`, {
           method: 'PUT',
           body: formData
         });
       } else {
         const endpoint = editingItem.type === 'contact' ? 'Contact' : 'Quote';
-        response = await fetch(`${API_BASE_URL}/api/${endpoint}/${editingItem.data.id}`, {
+        response = await fetch(`${API_BASE_URL}/${endpoint}/${editingItem.data.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -581,7 +581,7 @@ const AdminPage = () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/Portfolio`, {
+      const res = await fetch(`${API_BASE_URL}/Portfolio`, {
         method: "POST",
         body: formData
       });
@@ -1679,7 +1679,7 @@ const AdminPage = () => {
                                 <div className="flex gap-2">
                                   {a.imagePath ? (
                                     <button 
-                                      onClick={() => setLightboxImage(`${API_BASE_URL}${a.imagePath}`)}
+                                      onClick={() => setLightboxImage(a.imagePath)}
                                       className="text-xs bg-[#FAF7F2] hover:bg-[#D97736]/10 text-[#D97736] px-2 py-1 rounded-md border border-gray-200 transition-colors flex items-center gap-1 font-semibold"
                                     >
                                       Image <ExternalLink className="w-3 h-3" />
@@ -1688,7 +1688,7 @@ const AdminPage = () => {
 
                                   {a.floorPlanPath ? (
                                     <button 
-                                      onClick={() => setLightboxImage(`${API_BASE_URL}${a.floorPlanPath}`)}
+                                      onClick={() => setLightboxImage(a.floorPlanPath)}
                                       className="text-xs bg-[#FAF7F2] hover:bg-[#D97736]/10 text-[#D97736] px-2 py-1 rounded-md border border-gray-200 transition-colors flex items-center gap-1 font-semibold"
                                     >
                                       Plan <ExternalLink className="w-3 h-3" />
@@ -1901,10 +1901,10 @@ const AdminPage = () => {
                                 <td className="py-4 px-6">
                                   <div className="w-16 h-12 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center shrink-0">
                                     <img 
-                                      src={p.isStatic ? p.imagePath : `${API_BASE_URL}${p.imagePath}`} 
+                                      src={p.imagePath} 
                                       alt={p.title} 
                                       className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
-                                      onClick={() => setLightboxImage(p.isStatic ? p.imagePath : `${API_BASE_URL}${p.imagePath}`)}
+                                      onClick={() => setLightboxImage(p.imagePath)}
                                     />
                                   </div>
                                 </td>
@@ -2249,11 +2249,11 @@ const AdminPage = () => {
                       <div className="flex-1">
                         <p className="text-xs text-gray-400 font-sans font-semibold uppercase tracking-wider mb-3">Room Image</p>
                         <div 
-                          onClick={() => setLightboxImage(`${API_BASE_URL}${selectedItem.data.imagePath}`)}
+                          onClick={() => setLightboxImage(selectedItem.data.imagePath)}
                           className="relative rounded-2xl overflow-hidden border border-gray-200 cursor-zoom-in h-40 bg-gray-100 group"
                         >
                           <img 
-                            src={`${API_BASE_URL}${selectedItem.data.imagePath}`} 
+                            src={selectedItem.data.imagePath} 
                             alt="Room Design Request" 
                             className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
                           />
@@ -2270,11 +2270,11 @@ const AdminPage = () => {
                       <div className="flex-1">
                         <p className="text-xs text-gray-400 font-sans font-semibold uppercase tracking-wider mb-3">Floor Plan</p>
                         <div 
-                          onClick={() => setLightboxImage(`${API_BASE_URL}${selectedItem.data.floorPlanPath}`)}
+                          onClick={() => setLightboxImage(selectedItem.data.floorPlanPath)}
                           className="relative rounded-2xl overflow-hidden border border-gray-200 cursor-zoom-in h-40 bg-gray-100 group"
                         >
                           <img 
-                            src={`${API_BASE_URL}${selectedItem.data.floorPlanPath}`} 
+                            src={selectedItem.data.floorPlanPath} 
                             alt="Floor Plan Request" 
                             className="w-full h-full object-cover group-hover:scale-105 transition-all duration-300"
                           />
@@ -2477,7 +2477,7 @@ const AdminPage = () => {
                         <div className="grid grid-cols-4 gap-2">
                           {editPortfolioRetainedImages.map((imgPath, index) => (
                             <div key={index} className="relative group rounded overflow-hidden border border-gray-200">
-                              <img src={`${API_BASE_URL}${imgPath}`} alt={`Saved ${index}`} className="w-full h-12 object-cover" />
+                              <img src={imgPath} alt={`Saved ${index}`} className="w-full h-12 object-cover" />
                               <button 
                                 type="button"
                                 onClick={() => setEditPortfolioRetainedImages(prev => prev.filter((_, i) => i !== index))}

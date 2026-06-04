@@ -77,7 +77,7 @@ const PortfolioPage = () => {
   const [useFallback, setUseFallback] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/Portfolio`)
+    fetch(`${API_BASE_URL}/Portfolio`)
       .then(res => {
         if (res.ok) return res.json();
         throw new Error("Backend responded with error");
@@ -87,7 +87,7 @@ const PortfolioPage = () => {
           let addImages = [];
           try {
             if (item.additionalImages && item.additionalImages !== '[]') {
-              addImages = JSON.parse(item.additionalImages).map(p => `${API_BASE_URL}${p}`);
+              addImages = JSON.parse(item.additionalImages);
             }
           } catch (e) {
             console.error("Failed to parse additional images for item:", item.id);
@@ -97,7 +97,7 @@ const PortfolioPage = () => {
             title: item.title,
             location: item.location,
             category: item.category,
-            image: `${API_BASE_URL}${item.imagePath}`,
+            image: item.imagePath,
             additionalImages: addImages
           };
         });

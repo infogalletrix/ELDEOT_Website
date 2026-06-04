@@ -48,7 +48,7 @@ const ContactPage = () => {
         ...formData,
         phone: `${countryCode} ${formData.phone}`
       };
-      const response = await fetch(`${API_BASE_URL}/api/Contact`, {
+      const response = await fetch(`${API_BASE_URL}/Contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

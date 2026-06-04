@@ -114,7 +114,7 @@ const AIDesignerPage = () => {
 
     try {
       // Connect to the ASP.NET Core backend
-      const response = await fetch(`${API_BASE_URL}/api/AIDesign`, {
+      const response = await fetch(`${API_BASE_URL}/AIDesign`, {
         method: 'POST',
         body: submitData
       });

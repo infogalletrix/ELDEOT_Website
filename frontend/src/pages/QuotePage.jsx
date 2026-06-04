@@ -57,7 +57,7 @@ const QuotePage = () => {
           additionalNotes: `Calculator Lead | Name: ${calcData.name} | Phone: ${fullPhone} | Email: ${calcData.email} | Room Type: ${calcData.roomType} | Room Size: ${size} sqft | Quality: ${calcData.packageType} | Complexity: ${calcData.designComplexity}`
         };
 
-        await fetch(`${API_BASE_URL}/api/Quote`, {
+        await fetch(`${API_BASE_URL}/Quote`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
