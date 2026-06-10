@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../config';
 import { motion } from 'framer-motion';
 import { Star, User } from 'lucide-react';
 import {
@@ -8,34 +9,17 @@ import {
 } from '../hooks/useScrollAnimation';
 
 const Testimonials = () => {
-  const [testimonials, setTestimonials] = useState([
-    {
-      text: "Intério transformed our living space beyond our wildest dreams. The AI design tool gave us the perfect starting point, and the team executed flawlessly",
-      name: "Sarah Mitchell",
-      role: "Homeowner",
-      imagePath: ""
-    },
-    {
-      text: "AI-powered design suggestions made our office transformation faster, smarter, and more professional than we imagined.",
-      name: "James Chen",
-      role: "CEO, TechCorp",
-      imagePath: ""
-    },
-    {
-      text: "The commercial design service helped us create an atmosphere that our customers absolutely love. Revenue is up 30% since the renovation",
-      name: "Maria Garcia",
-      role: "Restaurant Owner",
-      imagePath: ""
-    }
-  ]);
+  const [testimonials, setTestimonials] = useState([]);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/Testimonial');
+        const response = await fetch(`${API_BASE_URL}/Testimonial`, {
+          headers: { 'Cache-Control': 'no-cache' }
+        });
         if (response.ok) {
           const data = await response.json();
-          if (data && data.length > 0) {
+          if (Array.isArray(data)) {
             setTestimonials(data);
           }
         }
@@ -45,6 +29,10 @@ const Testimonials = () => {
     };
     fetchTestimonials();
   }, []);
+
+  if (testimonials.length === 0) {
+    return null;
+  }
 
   return (
     <section className="bg-[#FAF7F2] pt-16 pb-24 px-4 md:px-6 lg:px-12">
