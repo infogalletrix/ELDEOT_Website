@@ -14,5 +14,6 @@ namespace backend.Data
         public DbSet<AIDesignRequest> AIDesignRequests { get; set; }
         public DbSet<QuoteRequest> QuoteRequests { get; set; }
         public DbSet<PortfolioItem> PortfolioItems { get; set; }
+        public DbSet<Testimonial> Testimonials { get; set; }
     }
 }

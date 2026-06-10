@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using backend.Data;
 using backend.Models;
 
@@ -23,6 +24,7 @@ namespace backend.Controllers
             return Ok(contacts);
         }
 
+        [Authorize]
         [HttpPost]
         public IActionResult AddContact(Contact contact)
         {
@@ -32,6 +34,7 @@ namespace backend.Controllers
 
             return Ok(contact);
         }
+        [Authorize]
         [HttpPut("{id}")]
         public IActionResult UpdateContact(int id, [FromBody] Contact updatedContact)
         {
@@ -45,6 +48,7 @@ namespace backend.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public IActionResult DeleteContact(int id)
         {

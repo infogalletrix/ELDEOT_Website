@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using backend.Data;
 using backend.Models;
 using Microsoft.AspNetCore.Http;
@@ -29,6 +30,7 @@ namespace backend.Controllers
             return Ok(items);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> AddPortfolioItem([FromForm] PortfolioItemDto itemDto)
         {
@@ -164,6 +166,7 @@ namespace backend.Controllers
             return Path.GetExtension(file.FileName).ToLowerInvariant();
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePortfolioItem(int id)
         {
@@ -209,6 +212,7 @@ namespace backend.Controllers
             return Ok(new { message = "Portfolio item deleted successfully." });
         }
 
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePortfolioItem(int id, [FromForm] PortfolioUpdateDto dto)
         {

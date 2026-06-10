@@ -1,5 +1,8 @@
 using backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://*:5000");
@@ -25,6 +28,21 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+            ValidAudience = builder.Configuration["JwtSettings:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"] ?? "fallback_key_make_it_long_enough"))
+        };
+    });
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -46,6 +64,7 @@ app.UseStaticFiles(new StaticFileOptions
     ContentTypeProvider = provider
 });
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Seed default portfolio items if none exist
@@ -55,6 +74,12 @@ using (var scope = app.Services.CreateScope())
     try
     {
         context.Database.EnsureCreated();
+        try
+        {
+            context.Database.ExecuteSqlRaw("CREATE TABLE IF NOT EXISTS Testimonials (Id int NOT NULL AUTO_INCREMENT, Name longtext, Role longtext, Text longtext, ImagePath longtext, CreatedAt datetime(6) NOT NULL, PRIMARY KEY (Id))");
+        }
+        catch { /* Ignore if it already exists or fails */ }
+        
         if (!context.PortfolioItems.Any())
         {
             var items = new List<backend.Models.PortfolioItem>
@@ -70,6 +95,18 @@ using (var scope = app.Services.CreateScope())
             };
 
             context.PortfolioItems.AddRange(items);
+            context.SaveChanges();
+        }
+        if (!context.Testimonials.Any())
+        {
+            var items = new List<backend.Models.Testimonial>
+            {
+                new backend.Models.Testimonial { Text = "Intério transformed our living space beyond our wildest dreams. The AI design tool gave us the perfect starting point, and the team executed flawlessly", Name = "Sarah Mitchell", Role = "Homeowner", ImagePath = "", CreatedAt = DateTime.UtcNow.AddDays(-3) },
+                new backend.Models.Testimonial { Text = "AI-powered design suggestions made our office transformation faster, smarter, and more professional than we imagined.", Name = "James Chen", Role = "CEO, TechCorp", ImagePath = "", CreatedAt = DateTime.UtcNow.AddDays(-2) },
+                new backend.Models.Testimonial { Text = "The commercial design service helped us create an atmosphere that our customers absolutely love. Revenue is up 30% since the renovation", Name = "Maria Garcia", Role = "Restaurant Owner", ImagePath = "", CreatedAt = DateTime.UtcNow.AddDays(-1) }
+            };
+
+            context.Testimonials.AddRange(items);
             context.SaveChanges();
         }
     }

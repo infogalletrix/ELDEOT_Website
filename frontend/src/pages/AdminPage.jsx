@@ -3,7 +3,7 @@ import {
   Lock, User, LayoutDashboard, Inbox, FileText, Sparkles, 
   LogOut, Search, Mail, Phone, Calendar, DollarSign, 
   ArrowRight, ShieldCheck, RefreshCw, Eye, ExternalLink, X,
-  Image as ImageIcon, Plus, Trash2, MapPin, Menu, Settings, Link, Edit, CheckCircle2
+  Image as ImageIcon, Plus, Trash2, MapPin, Menu, Settings, Link, Edit, CheckCircle2, Star, AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -51,6 +51,7 @@ const AdminPage = () => {
   const [quotes, setQuotes] = useState([]);
   const [aiRequests, setAiRequests] = useState([]);
   const [portfolioItems, setPortfolioItems] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
   const [usePortfolioFallback, setUsePortfolioFallback] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState('');
@@ -72,6 +73,15 @@ const AdminPage = () => {
   const [portfolioSubmitError, setPortfolioSubmitError] = useState('');
   const [isPortfolioSubmitting, setIsPortfolioSubmitting] = useState(false);
 
+  // New Testimonial Form State
+  const [newTestimonialName, setNewTestimonialName] = useState('');
+  const [newTestimonialRole, setNewTestimonialRole] = useState('');
+  const [newTestimonialText, setNewTestimonialText] = useState('');
+  const [newTestimonialImage, setNewTestimonialImage] = useState(null);
+  const [newTestimonialImagePreview, setNewTestimonialImagePreview] = useState('');
+  const [testimonialSubmitError, setTestimonialSubmitError] = useState('');
+  const [isTestimonialSubmitting, setIsTestimonialSubmitting] = useState(false);
+
   // Edit Portfolio Form State
   const [editPortfolioImage, setEditPortfolioImage] = useState(null);
   const [editPortfolioImagePreview, setEditPortfolioImagePreview] = useState('');
@@ -79,6 +89,9 @@ const AdminPage = () => {
   const [editPortfolioAdditionalImages, setEditPortfolioAdditionalImages] = useState([]);
   const [editPortfolioAdditionalPreviews, setEditPortfolioAdditionalPreviews] = useState([]);
   const [editPortfolioError, setEditPortfolioError] = useState('');
+
+  const [editTestimonialImage, setEditTestimonialImage] = useState(null);
+  const [editTestimonialImagePreview, setEditTestimonialImagePreview] = useState('');
 
   // New filter and session states
   const [quoteFilter, setQuoteFilter] = useState('all'); // all, provided, not-provided
@@ -191,17 +204,19 @@ const AdminPage = () => {
     setFetchError('');
     try {
       // Parallel fetches from backend controllers including portfolio items
-      const [contactsRes, quotesRes, aiRes, portfolioRes] = await Promise.all([
+      const [contactsRes, quotesRes, aiRes, portfolioRes, testimonialsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/Contact`).catch(() => null),
         fetch(`${API_BASE_URL}/Quote`).catch(() => null),
         fetch(`${API_BASE_URL}/AIDesign`).catch(() => null),
-        fetch(`${API_BASE_URL}/Portfolio`).catch(() => null)
+        fetch(`${API_BASE_URL}/Portfolio`).catch(() => null),
+        fetch(`${API_BASE_URL}/Testimonial`).catch(() => null)
       ]);
 
       let fetchedContacts = [];
       let fetchedQuotes = [];
       let fetchedAiRequests = [];
       let fetchedPortfolio = [];
+      let fetchedTestimonials = [];
 
       if (contactsRes && contactsRes.ok) {
         fetchedContacts = await contactsRes.json();
@@ -219,12 +234,16 @@ const AdminPage = () => {
       } else {
         setUsePortfolioFallback(true);
       }
+      if (testimonialsRes && testimonialsRes.ok) {
+        fetchedTestimonials = await testimonialsRes.json();
+      }
 
       // Sort by newest
       setContacts(fetchedContacts.reverse());
       setQuotes(fetchedQuotes.reverse());
       setAiRequests(fetchedAiRequests.reverse());
       setPortfolioItems(fetchedPortfolio); // The controller orders by CreatedAt descending
+      setTestimonials(fetchedTestimonials);
 
       if (!contactsRes && !quotesRes && !aiRes && !portfolioRes) {
         setFetchError(`Could not connect to backend APIs. Please verify that the .NET backend is running at ${API_BASE_URL}`);
@@ -248,20 +267,25 @@ const AdminPage = () => {
     setIsDeleting(true);
     
     try {
-      if (type === 'portfolio') {
-        const res = await fetch(`${API_BASE_URL}/Portfolio/${id}`, { method: 'DELETE' });
+      if (type === 'portfolio' || type === 'testimonial') {
+        const res = await fetch(`${API_BASE_URL}/${type === 'portfolio' ? 'Portfolio' : 'Testimonial'}/${id}`, { 
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken') }
+        });
         if (res.ok) {
-          setPortfolioItems(prev => prev.filter(item => item.id !== id));
-          showToast('success', 'Portfolio item deleted successfully.');
+          if (type === 'portfolio') setPortfolioItems(prev => prev.filter(item => item.id !== id));
+          if (type === 'testimonial') setTestimonials(prev => prev.filter(item => item.id !== id));
+          showToast('success', `${type === 'portfolio' ? 'Portfolio' : 'Testimonial'} item deleted successfully.`);
         } else {
-          showToast('error', 'Failed to delete portfolio item.');
+          showToast('error', `Failed to delete ${type} item.`);
         }
         return;
       }
 
       const endpoint = type === 'contact' ? 'Contact' : 'Quote';
       const response = await fetch(`${API_BASE_URL}/${endpoint}/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken') }
       });
       if (response.ok) {
         fetchDashboardData();
@@ -294,6 +318,9 @@ const AdminPage = () => {
       setEditPortfolioAdditionalImages([]);
       setEditPortfolioAdditionalPreviews([]);
       setEditPortfolioError('');
+    } else if (type === 'testimonial') {
+      setEditTestimonialImage(null);
+      setEditTestimonialImagePreview('');
     }
   };
 
@@ -322,6 +349,22 @@ const AdminPage = () => {
         
         response = await fetch(`${API_BASE_URL}/Portfolio/${editingItem.data.id}`, {
           method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken') },
+          body: formData
+        });
+      } else if (editingItem.type === 'testimonial') {
+        const formData = new FormData();
+        formData.append("Name", editingItem.data.name);
+        formData.append("Role", editingItem.data.role);
+        formData.append("Text", editingItem.data.text);
+        
+        if (editTestimonialImage) {
+          formData.append("Image", editTestimonialImage);
+        }
+        
+        response = await fetch(`${API_BASE_URL}/Testimonial/${editingItem.data.id}`, {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken') },
           body: formData
         });
       } else {
@@ -329,7 +372,8 @@ const AdminPage = () => {
         response = await fetch(`${API_BASE_URL}/${endpoint}/${editingItem.data.id}`, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken')
           },
           body: JSON.stringify(editingItem.data)
         });
@@ -377,17 +421,22 @@ const AdminPage = () => {
     }
   }, [activeTab]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError('');
     setLoginSuccess('');
     setIsSubmitting(true);
 
-    const activePassword = localStorage.getItem('adminPassword') || 'admineldeot2026';
+    try {
+      const response = await fetch(`${API_BASE_URL}/Auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-    // Simulate authentication lag for premium experience
-    setTimeout(() => {
-      if (username === 'admin' && password === activePassword) {
+      if (response.ok) {
+        const data = await response.json();
+        sessionStorage.setItem('jwtToken', data.token);
         setIsLoggedIn(true);
         sessionStorage.setItem('isAdminLoggedIn', 'true');
         recordLoginSession();
@@ -395,8 +444,12 @@ const AdminPage = () => {
       } else {
         setLoginError('Invalid username or password. Please try again.');
       }
+    } catch (err) {
+      console.error(err);
+      setLoginError('Network error checking login credentials.');
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   const handleSendOtp = async (e) => {
@@ -583,6 +636,7 @@ const AdminPage = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/Portfolio`, {
         method: "POST",
+        headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken') },
         body: formData
       });
 
@@ -609,6 +663,78 @@ const AdminPage = () => {
     }
   };
 
+  const handleAddTestimonial = async (e) => {
+    e.preventDefault();
+    setTestimonialSubmitError('');
+    setIsTestimonialSubmitting(true);
+
+    if (!newTestimonialName || !newTestimonialRole || !newTestimonialText) {
+      setTestimonialSubmitError("Name, Role, and Text are required.");
+      setIsTestimonialSubmitting(false);
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("Name", newTestimonialName);
+    formData.append("Role", newTestimonialRole);
+    formData.append("Text", newTestimonialText);
+    if (newTestimonialImage) {
+      formData.append("Image", newTestimonialImage);
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/Testimonial`, {
+        method: "POST",
+        headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('jwtToken') },
+        body: formData
+      });
+
+      if (res.ok) {
+        const newItem = await res.json();
+        setTestimonials(prev => [newItem, ...prev]);
+        setNewTestimonialName('');
+        setNewTestimonialRole('');
+        setNewTestimonialText('');
+        setNewTestimonialImage(null);
+        setNewTestimonialImagePreview('');
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        setTestimonialSubmitError(errorData.message || "Failed to add testimonial.");
+      }
+    } catch (err) {
+      console.error(err);
+      setTestimonialSubmitError("Error contacting server.");
+    } finally {
+      setIsTestimonialSubmitting(false);
+    }
+  };
+
+  const handleTestimonialImageChange = (e) => {
+    const file = e.target.files[0];
+    setTestimonialSubmitError('');
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setTestimonialSubmitError('Image size should be less than 5MB');
+        setNewTestimonialImage(null);
+        setNewTestimonialImagePreview('');
+        return;
+      }
+      setNewTestimonialImage(file);
+      setNewTestimonialImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleEditTestimonialImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('error', 'Image size should be less than 5MB');
+        return;
+      }
+      setEditTestimonialImage(file);
+      setEditTestimonialImagePreview(URL.createObjectURL(file));
+    }
+  };
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     setPortfolioSubmitError('');
@@ -796,19 +922,24 @@ const AdminPage = () => {
         { id: 'static-3', title: 'Artisan Café', location: 'Austin, TX', category: 'Commercial', imagePath: p2a3, isStatic: true },
         { id: 'static-4', title: 'The Copper Bean', location: 'Melbourne, Australia', category: 'Commercial', imagePath: p2b1, isStatic: true },
         { id: 'static-5', title: 'Contemporary Urban Living', location: 'Chicago, IL', category: 'Residential', imagePath: p2b2, isStatic: true },
-        { id: 'static-6', title: 'Nexa Creative Workspace', location: 'London, UK', category: 'Office', imagePath: p2b3, isStatic: true },
-        { id: 'static-7', title: 'Vertex Corporate', location: 'Toronto, Canada', category: 'Office', imagePath: p2c1, isStatic: true },
+        { id: 'static-6', title: 'Nexa Creative Workspace', location: 'London, UK', category: 'Office', imagePath: p2b3, isStatic: true },        { id: 'static-7', title: 'Vertex Corporate', location: 'Toronto, Canada', category: 'Office', imagePath: p2c1, isStatic: true },
         { id: 'static-8', title: 'Nexa Creative Office Room', location: 'New York, NY', category: 'Office', imagePath: p2c2, isStatic: true }
       ];
-      const itemsToRender = usePortfolioFallback ? staticProjects : portfolioItems;
-      return itemsToRender.filter(p => 
+      return usePortfolioFallback ? staticProjects : portfolioItems.filter(p => 
         (p.title && p.title.toLowerCase().includes(query)) ||
         (p.location && p.location.toLowerCase().includes(query)) ||
         (p.category && p.category.toLowerCase().includes(query))
       );
     }
+    if (activeTab === 'testimonials') {
+      return testimonials.filter(t => 
+        (t.name && t.name.toLowerCase().includes(query)) ||
+        (t.role && t.role.toLowerCase().includes(query)) ||
+        (t.text && t.text.toLowerCase().includes(query))
+      );
+    }
     return [];
-  };
+  };;
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] font-sans selection:bg-[#D97736] selection:text-white text-gray-800">
@@ -1212,6 +1343,18 @@ const AdminPage = () => {
                   {(usePortfolioFallback ? 8 : portfolioItems.length) > 0 && (
                     <span className="ml-auto bg-white/10 text-white text-[11px] px-2 py-0.5 rounded-full font-bold">
                       {usePortfolioFallback ? 8 : portfolioItems.length}
+                    </span>
+                  )}
+                </button>
+
+                <button 
+                  onClick={() => { setActiveTab('testimonials'); setSearchTerm(''); setIsSidebarOpen(false); }}
+                  className={`w-full h-[50px] px-4 rounded-xl flex items-center gap-3 font-sans text-[15px] transition-all cursor-pointer ${activeTab === 'testimonials' ? 'bg-[#D97736] text-white font-medium shadow-md shadow-[#D97736]/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                >
+                  <Star className="w-5 h-5" /> Testimonials
+                  {testimonials.length > 0 && (
+                    <span className="ml-auto bg-white/10 text-white text-[11px] px-2 py-0.5 rounded-full font-bold">
+                      {testimonials.length}
                     </span>
                   )}
                 </button>
@@ -1954,6 +2097,108 @@ const AdminPage = () => {
                 </div>
               )}
 
+              {/* ACTIVE TAB: TESTIMONIALS */}
+              {activeTab === 'testimonials' && (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-gray-100 mb-8">
+                    <h3 className="text-lg font-serif font-bold text-gray-800 border-b border-gray-100 pb-3 mb-6">
+                      Add New Testimonial
+                    </h3>
+                    <form onSubmit={handleAddTestimonial} className="space-y-4">
+                      {testimonialSubmitError && (
+                        <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100 flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4" />
+                          {testimonialSubmitError}
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                          <input type="text" value={newTestimonialName} onChange={(e) => setNewTestimonialName(e.target.value)} required className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D97736]/50 focus:border-[#D97736] transition-all" placeholder="e.g. Sarah Mitchell" />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Role / Designation</label>
+                          <input type="text" value={newTestimonialRole} onChange={(e) => setNewTestimonialRole(e.target.value)} required className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D97736]/50 focus:border-[#D97736] transition-all" placeholder="e.g. Homeowner" />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Testimonial Text</label>
+                        <textarea value={newTestimonialText} onChange={(e) => setNewTestimonialText(e.target.value)} required rows={3} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#D97736]/50 focus:border-[#D97736] transition-all resize-none" placeholder="What did they say about their experience?" />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture (Optional)</label>
+                        <div className="mt-1 flex items-center gap-4">
+                          <label className="cursor-pointer bg-white px-5 py-3 border border-gray-200 rounded-xl shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2">
+                            <ImageIcon className="w-4 h-4 text-gray-400" />
+                            Choose Image
+                            <input type="file" className="hidden" accept="image/jpeg, image/png, image/webp, image/svg+xml, image/avif" onChange={handleTestimonialImageChange} />
+                          </label>
+                          {newTestimonialImage && <span className="text-sm text-gray-500 font-medium truncate max-w-[200px]">{newTestimonialImage.name}</span>}
+                        </div>
+                        {newTestimonialImagePreview && (
+                          <div className="mt-4 relative w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md">
+                            <img src={newTestimonialImagePreview} alt="Preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex justify-end pt-4">
+                        <button type="submit" disabled={isTestimonialSubmitting} className="px-6 py-3 bg-[#D97736] text-white font-medium rounded-xl hover:bg-[#c2682d] transition-all shadow-md shadow-[#D97736]/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                          {isTestimonialSubmitting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                          {isTestimonialSubmitting ? 'Adding...' : 'Add Testimonial'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {getFilteredData().length === 0 ? (
+                      <div className="col-span-full py-16 text-center bg-white rounded-3xl border border-dashed border-gray-300">
+                        <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-1">No Testimonials Found</h3>
+                        <p className="text-gray-500 text-sm">Add a testimonial above or adjust your search.</p>
+                      </div>
+                    ) : (
+                      getFilteredData().map(testimonial => (
+                        <div key={testimonial.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow group flex flex-col h-full relative">
+                          <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white/90 backdrop-blur-sm p-1 rounded-lg border border-gray-100 shadow-sm">
+                            <button onClick={() => handleEditClick('testimonial', testimonial)} className="p-1.5 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-md transition-colors" title="Edit Testimonial">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => promptDelete('testimonial', testimonial.id)} className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Delete Testimonial">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          
+                          <div className="p-6 flex-grow flex flex-col pt-8">
+                            <div className="flex items-center gap-4 mb-5">
+                              <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-50 border border-gray-100 shadow-sm flex-shrink-0 flex items-center justify-center">
+                                {testimonial.imagePath ? (
+                                  <img src={`${API_BASE_URL.replace('/api', '')}${testimonial.imagePath}`} alt={testimonial.name} className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(testimonial.name) + '&background=random'} />
+                                ) : (
+                                  <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.name)}&background=random`} alt={testimonial.name} className="w-full h-full object-cover" />
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-bold font-serif text-gray-900 text-lg">{testimonial.name}</h4>
+                                <p className="text-xs text-[#D97736] font-medium tracking-wide uppercase">{testimonial.role}</p>
+                              </div>
+                            </div>
+                            <div className="text-gray-600 text-[15px] leading-relaxed italic flex-grow">"{testimonial.text}"</div>
+                            <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400 font-medium">
+                              <span>Added {new Date(testimonial.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* ACTIVE TAB: SETTINGS PASSWORD */}
               {activeTab === 'settings-password' && (
                 <div className="max-w-xl bg-white rounded-3xl border border-gray-100 shadow-sm p-6 lg:p-8 space-y-6 mx-auto lg:mx-0">
@@ -2371,7 +2616,7 @@ const AdminPage = () => {
           >
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <h3 className="font-sans font-bold text-[20px] text-gray-800">
-                Edit {editingItem.type === 'contact' ? 'Contact' : editingItem.type === 'quote' ? 'Quote' : 'Portfolio Item'}
+                Edit {editingItem.type === 'contact' ? 'Contact' : editingItem.type === 'quote' ? 'Quote' : editingItem.type === 'testimonial' ? 'Testimonial' : 'Portfolio Item'}
               </h3>
               <button 
                 onClick={() => setEditingItem(null)}
@@ -2522,6 +2767,35 @@ const AdminPage = () => {
                   {editPortfolioError && (
                     <div className="text-red-500 text-xs mt-1">{editPortfolioError}</div>
                   )}
+                </>
+              )}
+
+              {editingItem.type === 'testimonial' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Name</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.name || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, name: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Role/Designation</label>
+                    <input type="text" className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" value={editingItem.data.role || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, role: e.target.value}})} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Testimonial Text</label>
+                    <textarea className="w-full border p-2 rounded focus:outline-none focus:border-[#D97736]" rows="4" value={editingItem.data.text || ''} onChange={(e) => setEditingItem({...editingItem, data: {...editingItem.data, text: e.target.value}})}></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Replace Profile Image (Optional)</label>
+                    <input 
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.svg,.avif,.webp"
+                      onChange={handleEditTestimonialImageChange}
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#FAF7F2] file:text-[#D97736] hover:file:bg-[#f0e8dc]"
+                    />
+                    {editTestimonialImagePreview && (
+                      <img src={editTestimonialImagePreview} alt="Preview" className="mt-2 h-16 w-16 rounded-full object-cover border" />
+                    )}
+                  </div>
                 </>
               )}
 

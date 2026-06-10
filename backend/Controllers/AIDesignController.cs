@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using backend.Data;
 using backend.Models;
 using Microsoft.AspNetCore.Http;
@@ -19,6 +20,7 @@ namespace backend.Controllers
             _context = context;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> SubmitRequest([FromForm] AIDesignRequestDto requestDto)
         {

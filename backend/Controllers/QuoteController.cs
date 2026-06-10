@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using backend.Data;
 using backend.Models;
 using System.Threading.Tasks;
@@ -16,6 +17,7 @@ namespace backend.Controllers
             _context = context;
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> SubmitQuoteRequest([FromBody] QuoteRequest request)
         {
@@ -39,6 +41,7 @@ namespace backend.Controllers
             var quotes = _context.QuoteRequests.ToList();
             return Ok(quotes);
         }
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateQuote(int id, [FromBody] QuoteRequest updatedQuote)
         {
@@ -52,6 +55,7 @@ namespace backend.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteQuote(int id)
         {

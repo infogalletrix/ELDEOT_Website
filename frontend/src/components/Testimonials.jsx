@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Star } from 'lucide-react';
+import { Star, User } from 'lucide-react';
 import {
   staggerContainerVariant,
   staggerItemVariant,
@@ -8,23 +8,43 @@ import {
 } from '../hooks/useScrollAnimation';
 
 const Testimonials = () => {
-  const testimonials = [
+  const [testimonials, setTestimonials] = useState([
     {
       text: "Intério transformed our living space beyond our wildest dreams. The AI design tool gave us the perfect starting point, and the team executed flawlessly",
       name: "Sarah Mitchell",
-      role: "Homeowner"
+      role: "Homeowner",
+      imagePath: ""
     },
     {
       text: "AI-powered design suggestions made our office transformation faster, smarter, and more professional than we imagined.",
       name: "James Chen",
-      role: "CEO, TechCorp"
+      role: "CEO, TechCorp",
+      imagePath: ""
     },
     {
       text: "The commercial design service helped us create an atmosphere that our customers absolutely love. Revenue is up 30% since the renovation",
       name: "Maria Garcia",
-      role: "Restaurant Owner"
+      role: "Restaurant Owner",
+      imagePath: ""
     }
-  ];
+  ]);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/Testimonial');
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            setTestimonials(data);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch testimonials:', error);
+      }
+    };
+    fetchTestimonials();
+  }, []);
 
   return (
     <section className="bg-[#FAF7F2] pt-16 pb-24 px-4 md:px-6 lg:px-12">
@@ -84,13 +104,34 @@ const Testimonials = () => {
               </p>
 
               {/* Author */}
-              <div>
-                <h4 className="font-bold font-sans text-[#1A1A1A] text-lg mb-1">
-                  {testimonial.name}
-                </h4>
-                <p className="text-[#999999] font-sans text-sm">
-                  {testimonial.role}
-                </p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex-shrink-0 flex items-center justify-center">
+                  {testimonial.imagePath ? (
+                    <img 
+                      src={testimonial.imagePath} 
+                      alt={testimonial.name} 
+                      className="w-full h-full object-cover" 
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(testimonial.name) + '&background=random';
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(testimonial.name)}&background=random`} 
+                      alt={testimonial.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-bold font-sans text-[#1A1A1A] text-lg mb-1">
+                    {testimonial.name}
+                  </h4>
+                  <p className="text-[#999999] font-sans text-sm">
+                    {testimonial.role}
+                  </p>
+                </div>
               </div>
             </motion.div>
           ))}
