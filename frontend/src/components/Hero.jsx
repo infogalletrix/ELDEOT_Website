@@ -52,13 +52,13 @@ const Hero = () => {
         >
           <a 
             href="/get-quote" 
-            className="flex items-center justify-center gap-3 bg-[#D97736] text-white px-8 py-4 rounded-lg font-sans font-medium text-lg hover:bg-[#b86128] transition-colors min-w-[220px]"
+            className="flex items-center justify-center gap-3 bg-[#D97736] text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-sans font-medium text-base md:text-lg hover:bg-[#b86128] transition-colors min-w-[180px] md:min-w-[220px]"
           >
             Get Quote
           </a>
           <a 
             href="/services" 
-            className="flex items-center justify-center border border-white/70 text-white px-8 py-4 rounded-lg font-sans font-medium text-lg hover:bg-white/10 transition-colors min-w-[220px]"
+            className="flex items-center justify-center border border-white/70 text-white px-6 py-3 md:px-8 md:py-4 rounded-lg font-sans font-medium text-base md:text-lg hover:bg-white/10 transition-colors min-w-[180px] md:min-w-[220px]"
           >
             Explore Services
           </a>

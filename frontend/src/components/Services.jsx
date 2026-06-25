@@ -17,19 +17,22 @@ const Services = () => {
       title: "Home Design",
       desc: "Transform your living spaces with personalized interiors that blend comfort, elegance, and modern lifestyle needs.",
       img: img1,
-      icon: <Home className="w-6 h-6 text-[#D97736]" />
+      icon: <Home className="w-6 h-6 text-[#D97736]" />,
+      href: "/services#home-interior"
     },
     {
       title: "Office Design",
       desc: "Craft modern and efficient workspaces that inspire productivity, collaboration, and professional growth.",
       img: img2,
-      icon: <Building2 className="w-6 h-6 text-[#D97736]" />
+      icon: <Building2 className="w-6 h-6 text-[#D97736]" />,
+      href: "/services#office-design"
     },
     {
       title: "Commercial Design",
       desc: "Create impactful commercial interiors designed to attract customers and elevate brand experiences.",
       img: img3,
-      icon: <Store className="w-6 h-6 text-[#D97736]" />
+      icon: <Store className="w-6 h-6 text-[#D97736]" />,
+      href: "/services#commercial-design"
     }
   ];
 
@@ -74,10 +77,11 @@ const Services = () => {
           viewport={viewportOptions}
         >
           {services.map((service, index) => (
-            <motion.div
+            <motion.a
               key={index}
+              href={service.href}
               variants={staggerItemVariant}
-              className="bg-white rounded-[2rem] p-4 flex flex-col shadow-[0_10px_35px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(217,119,54,0.08)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer"
+              className="bg-white rounded-[2rem] p-4 flex flex-col shadow-[0_10px_35px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(217,119,54,0.08)] hover:-translate-y-2 transition-all duration-500 group cursor-pointer no-underline block"
             >
               {/* Image Container Wrapper */}
               <div className="relative w-full aspect-[4/3] mb-12 rounded-[1.5rem] shadow-[0_8px_30px_rgba(0,0,0,0.05)] group-hover:shadow-[0_25px_50px_rgba(217,119,54,0.18)] group-hover:-translate-y-2 group-hover:scale-[1.02] transition-all duration-500 ease-out z-10">
@@ -111,7 +115,7 @@ const Services = () => {
                   <ArrowUpRight className="w-6 h-6 text-[#D97736] group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform duration-300" />
                 </div>
               </div>
-            </motion.div>
+            </motion.a>
           ))}
         </motion.div>
 
@@ -125,7 +129,7 @@ const Services = () => {
         >
           <a
             href="/services"
-            className="inline-flex items-center gap-2 bg-transparent hover:bg-[#D97736] border-2 border-[#D97736] text-[#D97736] hover:text-white px-8 py-3.5 rounded-full font-sans font-medium text-lg transition-all duration-300 shadow-sm hover:shadow-[0_8px_20px_rgba(217,119,54,0.15)] group"
+            className="inline-flex items-center gap-2 bg-transparent hover:bg-[#D97736] border-2 border-[#D97736] text-[#D97736] hover:text-white px-6 py-3 md:px-8 md:py-3.5 rounded-full font-sans font-medium text-base md:text-lg transition-all duration-300 shadow-sm hover:shadow-[0_8px_20px_rgba(217,119,54,0.15)] group"
           >
             Explore All Services
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />

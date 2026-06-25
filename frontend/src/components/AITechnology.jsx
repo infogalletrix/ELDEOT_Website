@@ -67,7 +67,7 @@ const AITechnology = () => {
           {/* CTA Button */}
           <button 
             type="button"
-            className="inline-flex items-center gap-3 bg-[#D97736] text-white px-8 py-4 rounded-xl font-sans font-medium text-[17px] hover:bg-[#b86128] transition-colors shadow-lg shadow-[#D97736]/20 cursor-pointer"
+            className="inline-flex items-center gap-3 bg-[#D97736] text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-sans font-medium text-[15px] md:text-[17px] hover:bg-[#b86128] transition-colors shadow-lg shadow-[#D97736]/20 cursor-pointer"
           >
             AI Designer
             <ArrowRight className="w-5 h-5 ml-1" />

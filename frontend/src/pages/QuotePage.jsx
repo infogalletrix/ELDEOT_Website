@@ -108,7 +108,7 @@ const QuotePage = () => {
                   detailsRef.current?.scrollIntoView({ behavior: 'smooth' });
                 }, 100);
               }}
-              className="flex items-center justify-center gap-3 bg-[#D97736] text-white px-8 py-4 rounded-xl font-sans font-semibold text-lg hover:bg-[#b86128] transition-all duration-300 hover:scale-[1.03] shadow-lg shadow-[#D97736]/25 cursor-pointer"
+              className="flex items-center justify-center gap-3 bg-[#D97736] text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-sans font-semibold text-base md:text-lg hover:bg-[#b86128] transition-all duration-300 hover:scale-[1.03] shadow-lg shadow-[#D97736]/25 cursor-pointer"
             >
               <Calculator className="w-5 h-5" />
               Calculate Quote

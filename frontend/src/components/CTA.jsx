@@ -51,13 +51,13 @@ const CTA = () => {
         >
           <a
             href="/get-quote"
-            className="flex items-center justify-center bg-[#D97736] text-white px-8 py-4 rounded-xl font-sans font-medium text-[17px] hover:bg-[#b86128] transition-colors min-w-[200px]"
+            className="flex items-center justify-center bg-[#D97736] text-white px-6 py-3 md:px-8 md:py-4 rounded-xl font-sans font-medium text-[15px] md:text-[17px] hover:bg-[#b86128] transition-colors min-w-[160px] md:min-w-[200px]"
           >
             Get Quote
           </a>
           <a
             href="/contact"
-            className="flex items-center justify-center gap-2 border border-[#1A1A1A] text-[#1A1A1A] px-8 py-4 rounded-xl font-sans font-medium text-[17px] hover:bg-[#1A1A1A] hover:text-white transition-colors min-w-[200px]"
+            className="flex items-center justify-center gap-2 border border-[#1A1A1A] text-[#1A1A1A] px-6 py-3 md:px-8 md:py-4 rounded-xl font-sans font-medium text-[15px] md:text-[17px] hover:bg-[#1A1A1A] hover:text-white transition-colors min-w-[160px] md:min-w-[200px]"
           >
             Book Consultation
             <ArrowRight className="w-5 h-5" />

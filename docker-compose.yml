@@ -10,7 +10,9 @@ services:
 
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: interiordb
+      MYSQL_DATABASE: eldeot
+      MYSQL_USER: eldeot
+      MYSQL_PASSWORD: Eldeot@123
       MYSQL_ROOT_HOST: "%"
 
     ports:
